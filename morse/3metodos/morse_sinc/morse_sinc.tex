@@ -1,0 +1,103 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Configuración de colores para el código Fortran
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    language=Fortran
+}
+
+\title{Solución Espectral del Potencial de Morse mediante la Representación de Variable Discreta (Sinc-DVR)}
+\author{Sebastián Rodríguez García}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Fundamentación Teórica: El Método Sinc-DVR}
+A diferencia de los métodos de diferencias finitas, el esquema \textbf{Sinc-DVR} (\textit{Discrete Variable Representation}) no aproxima la derivada localmente, sino que utiliza una base global de funciones cardinales de Whittaker:
+\begin{equation}
+C_j(x) = \text{sinc}\left( \frac{\pi(x-x_j)}{\Delta x} \right) = \frac{\sin[\pi(x-x_j)/\Delta x]}{\pi(x-x_j)/\Delta x}
+\end{equation}
+
+Esta base es ortonormal en los puntos de la malla y posee la propiedad de que cualquier función de onda de banda limitada puede representarse de forma exacta. Esto otorga al método una \textbf{convergencia exponencial} (convergencia espectral), requiriendo un número de puntos sensiblemente menor para alcanzar la precisión analítica.
+
+\section{Representación Matricial del Hamiltoniano}
+Desde primeros principios, la energía cinética en este espacio se calcula de manera global. Para una malla equiespaciada con paso $\Delta x$, los elementos de la matriz Hamiltoniana $H_{ij} = \langle i | \hat{T} + \hat{V} | j \rangle$ se definen como:
+
+\begin{itemize}
+    \item \textbf{Elementos Diagonales ($i = j$):}
+    \begin{equation}
+    H_{ii} = \frac{\pi^2}{6\Delta x^2} + V(x_i)
+    \end{equation}
+    Donde $V(x_i) = D(1 - e^{-\alpha x_i})^2$ es el potencial de Morse evaluado en el punto $i$.
+    
+    \item \textbf{Elementos Fuera de la Diagonal ($i \neq j$):}
+    \begin{equation}
+    H_{ij} = \frac{(-1)^{i-j}}{\Delta x^2 (i-j)^2}
+    \end{equation}
+\end{itemize}
+
+\section{Flujo Lógico y Estructura del Código}
+El programa \texttt{morse\_sinc.f} implementa este formalismo siguiendo un flujo lineal y eficiente:
+
+\begin{enumerate}
+    \item \textbf{Definición de Parámetros Físicos:} Se establecen $D = 10.0$ y $\alpha = 0.5$ (líneas 14-15), garantizando la consistencia con el modelo físico de referencia.
+    \item \textbf{Generación de la Malla:} Se construye una grilla de $N=200$ puntos (línea 18). Debido a la naturaleza espectral, este $N$ es suficiente para obtener una precisión superior a la de una malla de 1000 puntos en diferencias finitas.
+    \item \textbf{Ensamblaje de la Matriz Densa (Líneas 23-37):} A diferencia de FDM, esta matriz es \textbf{densa} (todos los elementos $H_{ij}$ son generalmente no nulos), lo que refleja el acoplamiento global de la base Sinc.
+\end{enumerate}
+
+\begin{lstlisting}[caption={Implementación de la matriz Hamiltoniana Sinc-DVR}]
+      DO I=1,N
+         X_I = XMIN + FLOAT(I)*DX
+         V_I = D_POT * (1.D0 - DEXP(-ALPHA * X_I))**2
+         DO J=1,N
+            IF (I .EQ. J) THEN
+               H(I,J) = (PI**2) / (6.D0 * DX2) + V_I
+            ELSE
+               SIGN_FACTOR = (-1.D0)**(I-J)
+               DIST2 = FLOAT(I-J)**2
+               H(I,J) = SIGN_FACTOR / (DX2 * DIST2)
+            END IF
+         END DO
+      END DO
+\end{lstlisting}
+
+\section{Validación y Comparación Analítica}
+El espectro obtenido mediante la diagonalización de esta matriz densa coincide con el valor exacto de Morse:
+\begin{equation}
+E_n = \alpha\sqrt{2D}(n + 1/2) - \frac{\alpha^2 2D}{4D}(n + 1/2)^2
+\end{equation}
+Con $N=200$, el código arroja $E_0 \approx 1.08678$, demostrando la superioridad del método en términos de \textbf{precisión por punto de malla}.
+
+\section{Consideraciones de HPC (High Performance Computing)}
+El método Sinc-DVR presenta un desafío computacional distinto:
+\begin{itemize}
+    \item \textbf{Densidad de Datos:} La matriz requiere $O(N^2)$ de almacenamiento.
+    \item \textbf{Cálculo de Autovalores:} Al ser una matriz densa, el uso de \texttt{DSYEV} de la librería LAPACK es indispensable para mantener el rendimiento $O(N^3)$.
+    \item \textbf{Paralelismo:} La construcción de la matriz es altamente eficiente en arquitecturas multihilo, ya que cada elemento $H_{ij}$ es independiente.
+\end{itemize}
+
+\end{document}

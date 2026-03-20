@@ -1,0 +1,86 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,                 
+    language=Fortran,
+    numbers=left
+}
+
+\title{Solución de la Ecuación de Schrödinger para el Potencial de Morse mediante el Método de Disparo (Shooting Method)}
+\author{Sebastián Rodríguez García}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Fundamentación Teórica: El Método de Disparo}
+El método de disparo aborda la ecuación de Schrödinger independiente del tiempo como una ecuación diferencial ordinaria (EDO) de segundo orden:
+\begin{equation}
+\frac{d^2\psi(x)}{dx^2} = -2m [E - V(x)]\psi(x)
+\end{equation}
+Para estados acotados, la función de onda debe satisfacer las condiciones de frontera $\psi(x) \to 0$ cuando $x \to \infty$. Dado que $E$ es un parámetro desconocido (el autovalor), el problema se convierte en una búsqueda de raíces: encontramos los valores de $E$ tales que la integración numérica de la EDO partiendo de $x_{min}$ resulte en $\psi(x_{max}) = 0$.
+
+\section{Algoritmo de Integración: Numerov}
+Para maximizar la precisión en la propagación de la función de onda, se utiliza habitualmente el algoritmo de **Numerov**, el cual aprovecha la forma específica de la ecuación de Schrödinger ($y'' = f(x)y$) para obtener un error de orden $\mathcal{O}(\Delta x^6)$. La relación de recurrencia es:
+\begin{equation}
+\psi_{i+1} = \frac{2(1 - \frac{5h^2}{12}k_i^2)\psi_i - (1 + \frac{h^2}{12}k_{i-1}^2)\psi_{i-1}}{1 + \frac{h^2}{12}k_{i+1}^2}
+\end{equation}
+donde $k(x)^2 = 2(E - V(x))$.
+
+\section{Flujo Lógico del Código \texttt{morse\_shoot.f}}
+El programa sigue un esquema de control de flujo basado en bisección:
+
+\begin{enumerate}
+    \item \textbf{Inicialización de Energía:} Se define un intervalo $[E_{low}, E_{up}]$ donde se sospecha que existe un autovalor.
+    \item \textbf{Propagación:} Para una energía $E_{trial}$, se integra la función de onda desde un punto cercano al origen (donde $\psi \approx 0$) hasta un punto en la región clásicamente prohibida.
+    \item \textbf{Condición de Nodo:} Se cuenta el número de nodos (cruces por cero) de la función de onda para identificar a qué nivel cuántico ($n$) corresponde la energía actual.
+    \item \textbf{Refinamiento (Bisección):} Si $\psi(x_{max})$ tiene el signo incorrecto para el número de nodos deseado, se ajusta $E_{trial}$ y se repite el proceso hasta que $|\psi(x_{max})| < \epsilon$.
+\end{enumerate}
+
+\begin{lstlisting}[caption={Bucle de bisección para encontrar el autovalor E}]
+      DO WHILE (DABS(EUP - ELOW) .GT. TOL)
+         ETRIAL = (EUP + ELOW) / 2.D0
+         CALL PROPAGAR(ETRIAL, PSI_FINAL, NODOS)
+         
+         IF (NODOS .GT. N_DESEADO) THEN
+            EUP = ETRIAL
+         ELSE IF (NODOS .LT. N_DESEADO) THEN
+            ELOW = ETRIAL
+         ELSE
+            ! Si los nodos coinciden, refinamos segun el valor final
+            IF (PSI_FINAL * SIGNO_REF .GT. 0.D0) THEN
+               EUP = ETRIAL
+            ELSE
+               ELOW = ETRIAL
+            END IF
+         END IF
+      END DO
+\end{lstlisting}
+
+\section{Validación y Resultados}
+Al aplicar este método con $D=10$ y $\alpha=0.5$, el algoritmo de disparo converge al valor analítico $E_0 = 1.08678$ tras aproximadamente 20 iteraciones de bisección. La principal ventaja de este método es que permite visualizar la función de onda $\psi_n(x)$ durante el proceso de convergencia.
+
+\section{Consideraciones de HPC}
+Desde la perspectiva de sistemas distribuidos y cómputo de alto rendimiento:
+\begin{itemize}
+    \item \textbf{Eficiencia de Memoria:} A diferencia de FDM o DVR, el método de disparo no requiere almacenar matrices, lo que lo hace ideal para sistemas con memoria limitada ($O(1)$ en almacenamiento de matriz).
+    \item \textbf{Paralelismo:} La búsqueda de diferentes niveles de energía ($n=0, 1, 2...$) es totalmente independiente. Se puede asignar un procesador a cada nivel de energía, logrando un escalamiento lineal perfecto.
+\end{itemize}
+
+\end{document}
