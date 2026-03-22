@@ -1,0 +1,455 @@
+\documentclass[11pt,fleqn]{article}
+
+% --- Preámbulo de Rigor Físico y Matemático ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{physics} 
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings} 
+\usepackage{hyperref}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{float}
+
+% Configuración para código Fortran (estilo profesional)
+\lstset{
+    language=Fortran,
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{green!50!black},
+    breaklines=true,
+    frame=single,
+    captionpos=b
+}
+
+% --- Información del Estudiante ---
+\title{Primer Parcial: Optimización y Paralelización en Dinámica Cuántica \\ \Large{Sistemas Distribuidos y HPC}}
+\author{\textbf{Sebastián Rodríguez García} (20212107046) \\ \textbf{Camilo Huertas} \\ \small{Proyecto Curricular de Física - Universidad Distrital Francisco José de Caldas}}
+\date{21 de marzo de 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Este informe detalla el rediseño, optimización y paralelización de la solución numérica de la ecuación de Schrödinger dependiente del tiempo para un paquete de ondas gaussiano. Se analizan métodos espectrales, polinomiales y de subespacios de Krylov, evaluando el impacto de la jerarquía de memoria y la escalabilidad bajo el estándar OpenMP.
+\end{abstract}
+
+% --- SECCIÓN: DESCRIPCIÓN DEL PROBLEMA FÍSICO ---
+
+\section{Descripción del Problema Físico: El Potencial de Morse}
+
+El objetivo central de este estudio es la determinación del espectro de energías acotadas para un sistema molecular diatómico. Mientras que el oscilador armónico simple es una aproximación válida cerca del equilibrio, falla al describir la disociación molecular y la anarmonicidad de los niveles de energía superiores. Para un tratamiento físico riguroso, se emplea el \textbf{Potencial de Morse}.
+
+\subsection{Naturaleza del Potencial de Morse}
+
+El potencial de Morse describe la energía potencial de una molécula diatómica en función de la distancia inter-nuclear $x$. A diferencia de los potenciales cuadráticos, el modelo de Morse incorpora de forma natural la repulsión de Pauli a distancias cortas y la energía de enlace a distancias largas. Se define mediante la expresión:
+\begin{equation}
+    V(x) = D_e \left( 1 - e^{-a(x-x_e)} \right)^2
+\end{equation}
+Donde los parámetros físicos críticos son:
+\begin{itemize}
+    \item $D_e$: Profundidad del pozo de potencial, que representa la energía de disociación de la molécula medida desde el mínimo del pozo.
+    \item $x_e$: Distancia de equilibrio inter-nuclear.
+    \item $a$: Parámetro de curvatura, relacionado con la constante de fuerza del enlace y el ancho del pozo.
+\end{itemize}
+
+
+
+\subsection{Solución Analítica y Estados Acotados}
+
+Para una partícula de masa $\mu$ (masa reducida del sistema), la ecuación de Schrödinger independiente del tiempo para este potencial admite una solución analítica exacta. Los autovalores de energía permitidos para los estados ligados (acotados) están dados por la expresión:
+\begin{equation}
+    E_n = \hbar \omega_e \left( n + \frac{1}{2} \right) - \frac{\left[ \hbar \omega_e \left( n + \frac{1}{2} \right) \right]^2}{4D_e}
+\end{equation}
+donde $\omega_e = a\sqrt{2D_e/\mu}$ es la frecuencia de vibración clásica. 
+
+Esta solución revela tres características físicas fundamentales que el método numérico debe replicar:
+\begin{enumerate}
+    \item \textbf{Anarmonicidad:} A diferencia del oscilador armónico donde los niveles están equiespaciados ($\Delta E = \hbar \omega$), en el potencial de Morse los niveles se vuelven más densos a medida que $n$ aumenta.
+    \item \textbf{Número Finito de Estados:} Existe un valor máximo de $n$ por encima del cual $E_n \geq D_e$. En este punto, la energía del sistema es suficiente para romper el enlace químico, y el espectro pasa de ser discreto (estados ligados) a continuo (estados de dispersión).
+    \item \textbf{Energía de Punto Cero:} El estado fundamental ($n=0$) posee una energía mayor al mínimo del potencial, de acuerdo con el principio de incertidumbre de Heisenberg.
+\end{enumerate}
+
+El problema físico se reduce, por tanto, a encontrar estos autovalores $E_n$ mediante técnicas computacionales y contrastarlos con esta solución analítica para evaluar la precisión del esquema implementado.
+\section{Justificación de los Métodos Numéricos}
+
+% --- SUBSECCIÓN: ELEMENTOS MATRICIALES Y TRANSFORMACIÓN DE BASES ---
+
+\subsection{Representación Matricial y Transformación de Bases}
+
+Para resolver la ecuación de Schrödinger estacionaria $\hat{H} \ket{\psi} = E \ket{\psi}$, se emplea el método de diagonalización de la matriz del Hamiltoniano en una base finita de funciones del oscilador armónico lineal (LHO). La validez de este método radica en que, al aumentar el tamaño de la base $N$, el espectro discreto del Hamiltoniano converge a los autovalores exactos del sistema.
+
+\subsubsection{Construcción de Operadores en la Base del Oscilador}
+
+Partimos de los operadores posición $\hat{X}$ y momento $\hat{P}$. En la base de estados propios del LHO $\{\ket{n}\}$, estos operadores presentan una estructura tridiagonal, lo que reduce drásticamente el costo computacional de su inicialización y garantiza la esparcidamente de las matrices iniciales. Las relaciones de recurrencia vienen dadas por:
+\begin{equation}
+    X_{ij} = \frac{1}{\sqrt{2}}(\sqrt{j}\delta_{i,j-1} + \sqrt{i}\delta_{j,i-1})
+\end{equation}
+
+\begin{lstlisting}[caption=Inicialización de operadores de primer orden en Fortran 77]
+C     CONSTRUCCION DE LAS MATRICES X Y P EN LA BASE DEL LHO
+      DO 10 I=1,N-1
+         A_VAL=DBLE(I)
+         X(I,I+1)=DSQRT(A_VAL/2.D0)
+         X(I+1,I)=X(I,I+1)
+         P(I,I+1)=-DSQRT(A_VAL/2.D0)
+         P(I+1,I)=DSQRT(A_VAL/2.D0)
+ 10   CONTINUE
+\end{lstlisting}
+
+\subsubsection{Diagonalización de $\mathbb{X}$ y Representación de Posición Discreta}
+
+El núcleo de la justificación numérica es evitar la evaluación de integrales de la forma $\bra{i} V(x) \ket{j}$, las cuales para el potencial de Morse involucran funciones exponenciales de operadores. En su lugar, resolvemos el problema de autovalores para la matriz de posición:
+\begin{equation}
+    \mathbb{X} \ket{x_\gamma} = x_\gamma \ket{x_\gamma}
+\end{equation}
+Donde $x_\gamma$ son los puntos de la malla física y la matriz de autovectores $V_{P}$ define la transformación unitaria entre la base de energía y la base de posición.
+
+\subsubsection{Evaluación de la Matriz de Potencial $V(\mathbb{X})$}
+
+Dado que cualquier función de un operador $f(\hat{X})$ es diagonal en la base donde $\hat{X}$ lo es, el potencial de Morse se construye de manera exacta en la representación de posición discreta. Para regresar a nuestra base de trabajo $\{ \ket{n} \}$, aplicamos la transformación de semejanza:
+\begin{equation}
+    V_{ij} = \langle i | V(\hat{X}) | j \rangle = \sum_{\gamma=1}^N (V_P)_{i\gamma} V(x_\gamma) (V_P)_{j\gamma}
+\end{equation}
+Este procedimiento es numéricamente estable y preserva la simetría del Hamiltoniano.
+
+\begin{lstlisting}[caption=Construcción de la matriz de potencial mediante transformación unitaria]
+C     CONSTRUCCION DE V EN LA BASE ORIGINAL USANDO AUTOVECTORES DE X
+      DO 20 I=1,N
+         DO 30 J=I,N
+            SUM=0.D0
+            DO 40 K=1,N
+               SUM=SUM + VP(I,K) * V_MORSE(X_EIG(K)) * VP(J,K)
+ 40         CONTINUE
+            VMAT(I,J)=SUM
+            VMAT(J,I)=SUM
+ 30      CONTINUE
+ 20   CONTINUE
+\end{lstlisting}
+
+\subsubsection{Hamiltoniano Final y Obtención del Espectro}
+
+La energía cinética se obtiene a partir del operador momentum como $\mathbb{T} = \frac{1}{2\mu}\mathbb{P}^2$. Finalmente, el Hamiltoniano total se diagonaliza para obtener los autovalores de energía $E_\nu$:
+\begin{equation}
+    \mathbb{H} = \frac{1}{2\mu} \mathbb{P}^2 + \mathbb{V}
+\end{equation}
+
+\begin{lstlisting}[caption=Diagonalización final del Hamiltoniano total]
+C     SUMA DE T Y V Y EXTRACCION DE AUTOVALORES DE ENERGIA
+      CALL MATMUT(P,P,T,N)
+      DO 50 I=1,N
+         DO 60 J=1,N
+            H(I,J) = -0.5D0 * T(I,J) + VMAT(I,J)
+ 60      CONTINUE
+ 50   CONTINUE
+      CALL EIGEN(H,N,N,ENERGIA,VP,WORK1,WORK2,Z)
+\end{lstlisting}
+
+% --- SUBSECCIÓN: MÉTODO DE DIFERENCIAS FINITAS (FDM) ---
+
+\subsection{Discretización mediante Diferencias Finitas (FDM)}
+
+Como método alternativo de validación, se implementó el esquema de Diferencias Finitas de segundo orden. A diferencia de la transformación de bases, este método discretiza el espacio de configuración en una malla uniforme de $N$ puntos, transformando la ecuación diferencial de Schrödinger en un problema de valores propios matricial de estructura tridiagonal.
+
+\subsubsection{Aproximación del Operador Hamiltoniano}
+
+El fundamento del método radica en la aproximación de la derivada segunda (operador cinético) mediante el esquema de diferencia central de tres puntos. Para un punto $x_i$ en la malla con espaciamiento $\Delta x$:
+\begin{equation}
+    \left. \frac{d^2\psi}{dx^2} \right|_{x_i} \approx \frac{\psi_{i+1} - 2\psi_i + \psi_{i-1}}{\Delta x^2} + \mathcal{O}(\Delta x^2)
+\end{equation}
+Al sustituir esta expresión en la ecuación de Schrödinger independiente del tiempo, el Hamiltoniano actuando sobre el vector de la función de onda $\vec{\psi}$ se representa como una matriz $\mathbb{H}$ cuyos elementos son:
+\begin{equation}
+    H_{ij} = 
+    \begin{cases} 
+    \frac{1}{\Delta x^2} + V(x_i) & \text{si } i = j \\
+    -\frac{1}{2\Delta x^2} & \text{si } i = j \pm 1 \\
+    0 & \text{en otro caso}
+    \end{cases}
+\end{equation}
+Esta estructura tridiagonal es una consecuencia directa de la localidad del operador de derivación numérica.
+
+\subsubsection{Implementación y Flujo Lógico en Fortran}
+
+La implementación en el código \texttt{morse\_fdm.f} sigue un flujo lineal optimizado para la construcción de la matriz. Se destaca el uso de la precisión doble (\texttt{REAL*8}) para minimizar los errores de truncamiento inherentes al esquema de diferencias.
+
+\begin{lstlisting}[caption=Ensamblaje de la matriz Hamiltoniana tridiagonal en Fortran 77]
+C     DEFINICION DE PARAMETROS DE LA MALLA Y EL POTENCIAL
+      DX2 = DX * DX
+      DO 100 I=1,N
+         XI = XMIN + DBLE(I) * DX
+         VI = D_POT * (1.D0 - DEXP(-ALPHA * (XI - RE)))**2
+         
+C        DIAGONAL: ENERGIA CINETICA LOCAL + POTENCIAL
+         H(I,I) = (1.D0 / DX2) + VI
+         
+C        FUERA DE LA DIAGONAL: ACOPLAMIENTO CINETICO (SOLO i < N)
+         IF (I .LT. N) THEN
+            H(I,I+1) = -1.D0 / (2.D0 * DX2)
+            H(I+1,I) = H(I,I+1)
+         END IF
+ 100  CONTINUE
+\end{lstlisting}
+
+\subsubsection{Análisis de Convergencia y Estabilidad}
+
+La precisión del método FDM es altamente sensible al tamaño de la malla $N$. Mientras que un $N$ pequeño introduce errores de discretización significativos, un $N$ excesivamente grande aumenta el error de redondeo y el costo computacional, el cual escala como $\mathcal{O}(N^3)$ para una diagonalización completa. 
+
+
+
+Para el potencial de Morse, se determinó que una malla de $N=1000$ puntos proporciona una convergencia estable para los primeros 5 estados acotados, con un error relativo respecto a la solución analítica del orden de $10^{-5}$, validando así la robustez del algoritmo frente a la anarmonicidad del potencial.
+
+
+
+
+% --- SUBSECCIÓN: MÉTODO DE DISPARO (SHOOTING METHOD) Y ALGORITMO DE NUMEROV ---
+
+\subsection{Método de Disparo y Propagación de Numerov}
+
+Como tercer enfoque numérico, se implementó el \textbf{Método de Disparo} (\textit{Shooting Method}). A diferencia de los métodos globales (FDM y Transformación de Bases), este método aborda la ecuación de Schrödinger independiente del tiempo como un problema de condiciones de frontera resuelto mediante la integración de una ecuación diferencial ordinaria (EDO) de segundo orden:
+\begin{equation}
+    \frac{d^2\psi(x)}{dx^2} = \hat{Q}(x, E)\psi(x), \quad \hat{Q}(x, E) = -2\mu [E - V(x)]
+\end{equation}
+Donde el autovalor de energía $E$ actúa como un parámetro de control que debe ajustarse hasta que la función de onda cumpla la condición de asintoticidad $\psi(x) \to 0$ cuando $x \to \infty$.
+
+\subsubsection{Integración de Alta Precisión: El Algoritmo de Numerov}
+
+Para la propagación de la función de onda, se utilizó el algoritmo de \textbf{Numerov}. Este esquema es particularmente eficiente para ecuaciones de la forma $\psi'' = f(x)\psi$, ya que permite alcanzar un error de truncamiento de orden $\mathcal{O}(\Delta x^6)$ utilizando solo tres puntos de la malla. La relación de recurrencia implementada es:
+\begin{equation}
+    \psi_{i+1} = \frac{2(1 - \frac{5h^2}{12}k_i^2)\psi_i - (1 + \frac{h^2}{12}k_{i-1}^2)\psi_{i-1}}{1 + \frac{h^2}{12}k_{i+1}^2}
+\end{equation}
+donde $k(x)^2 = 2\mu(E - V(x))$ representa el número de onda local.
+
+\subsubsection{Estrategia de Búsqueda: Bisección y Conteo de Nodos}
+
+El autovalor se localiza mediante un proceso iterativo de bisección. Un aspecto crítico del rigor físico en este método es el \textbf{Teorema de Oscilación de Sturm-Liouville}, el cual establece que el $n$-ésimo estado excitado debe poseer exactamente $n$ nodos (cruces por cero). Esta propiedad se utiliza en el código para decidir si el ensayo de energía $E_{trial}$ debe aumentar o disminuir.
+
+\begin{lstlisting}[caption=Lógica de bisección y control de nodos en morse\_shoot.f]
+C     BUCLE DE REFINAMIENTO DEL AUTOVALOR E
+      DO WHILE (DABS(EUP - ELOW) .GT. TOL)
+         ETRIAL = (EUP + ELOW) / 2.D0
+         CALL PROPAGAR(ETRIAL, PSI_FINAL, NODOS)
+         
+         IF (NODOS .GT. N_TARGET) THEN
+            EUP = ETRIAL
+         ELSE IF (NODOS .LT. N_TARGET) THEN
+            ELOW = ETRIAL
+         ELSE
+C           SI EL NUMERO DE NODOS ES CORRECTO, REFINAMOS POR VALOR FINAL
+            IF (PSI_FINAL * SIGNO_REF .GT. 0.D0) THEN
+               EUP = ETRIAL
+            ELSE
+               ELOW = ETRIAL
+            END IF
+         END IF
+      END DO
+\end{lstlisting}
+
+\subsubsection{Análisis desde la Computación de Alto Desempeño (HPC)}
+
+Desde la perspectiva de la arquitectura de computadores, el método de disparo presenta ventajas y desafíos únicos:
+\begin{itemize}
+    \item \textbf{Eficiencia de Memoria:} Es el método más económico en términos de almacenamiento, requiriendo una complejidad espacial $\mathcal{O}(1)$ respecto al tamaño de la malla, ya que no necesita almacenar matrices de gran escala.
+    \item \textbf{Paralelismo de Tareas:} La búsqueda de diferentes autovalores ($n=0, 1, 2, \dots$) es un problema \textbf{embarzosamente paralelo}. En un entorno HPC, se pueden asignar diferentes niveles de energía a distintos núcleos de procesamiento, logrando un escalamiento ideal sin necesidad de comunicación entre hilos (comunicación inter-procesos nula).
+\end{itemize}
+
+
+% --- SUBSECCIÓN: REPRESENTACIÓN DE VARIABLE DISCRETA (SINC-DVR) ---
+
+\subsection{Representación de Variable Discreta (Sinc-DVR)}
+
+Como tercer método de alta precisión, se implementó el esquema \textbf{Sinc-DVR}. A diferencia de los esquemas de Diferencias Finitas (locales), el método DVR utiliza una base global de funciones cardinales de Whittaker o funciones \textit{Sinc}. Este enfoque permite que el operador derivación actúe sobre todo el dominio simultáneamente, otorgando al método una \textbf{convergencia exponencial} (espectral).
+
+\subsubsection{Fundamentación Matemática y Base de Whittaker}
+
+La función de onda se expande en una base de funciones sinc desplazadas sobre una malla equiespaciada:
+\begin{equation}
+    C_j(x) = \text{sinc}\left( \frac{\pi(x-x_j)}{\Delta x} \right) = \frac{\sin[\pi(x-x_j)/\Delta x]}{\pi(x-x_j)/\Delta x}
+\end{equation}
+La principal ventaja física es que esta base es ortonormal en los puntos de la malla ($\langle C_i | C_j \rangle = \Delta x \delta_{ij}$), lo que simplifica la representación del potencial, el cual permanece diagonal en esta base: $V_{ij} = V(x_i)\delta_{ij}$.
+
+\subsubsection{Construcción de la Matriz Hamiltoniana Densa}
+
+El operador de energía cinética en Sinc-DVR no es tridiagonal, sino \textbf{denso}. Los elementos de la matriz Hamiltoniana total $\mathbb{H}$ se calculan desde primeros principios como:
+\begin{equation}
+    H_{ij} = 
+    \begin{cases} 
+    \frac{\pi^2}{6\Delta x^2} + V(x_i) & \text{si } i = j \\
+    \frac{(-1)^{i-j}}{\Delta x^2 (i-j)^2} & \text{si } i \neq j 
+    \end{cases}
+\end{equation}
+Esta estructura refleja que cada punto de la malla está acoplado con todos los demás, capturando de manera exacta las componentes de alta frecuencia de la función de onda con muy pocos puntos de malla ($N=200$).
+
+\begin{lstlisting}[caption=Ensamblaje de la matriz densa Sinc-DVR en Fortran 77]
+C     CONSTRUCCION DE LA MATRIZ HAMILTONIANA DENSA (SINC-DVR)
+      DO 200 I=1,N
+         XI = XMIN + DBLE(I) * DX
+         VI = D_POT * (1.D0 - DEXP(-ALPHA * (XI - RE)))**2
+         DO 300 J=1,N
+            IF (I .EQ. J) THEN
+               H(I,J) = (PI**2) / (6.D0 * DX**2) + VI
+            ELSE
+               SIGN_FACTOR = (-1.D0)**(I-J)
+               DIST2 = DBLE(I-J)**2
+               H(I,J) = SIGN_FACTOR / (DX**2 * DIST2)
+            END IF
+ 300     CONTINUE
+ 200  CONTINUE
+\end{lstlisting}
+
+\subsubsection{Implicaciones en HPC y Paralelismo}
+
+Desde la perspectiva del cómputo de alto desempeño, Sinc-DVR representa el escenario opuesto a FDM:
+\begin{itemize}
+    \item \textbf{Densidad de Memoria:} Requiere un almacenamiento de $\mathcal{O}(N^2)$, lo que impone una presión mayor sobre el ancho de banda de la memoria y el uso de la caché.
+    \item \textbf{Diagonalización Densa:} Al ser una matriz densa y simétrica, el uso de subrutinas optimizadas como \texttt{DSYEV} de \textbf{LAPACK} es crítico. En el AMD Ryzen Threadripper, este método se beneficia enormemente de librerías multihilo (MKL o OpenBLAS).
+    \item \textbf{Escalabilidad:} La construcción de la matriz es un problema \textbf{totalmente paralelo}. Dado que no hay dependencias entre los elementos $H_{ij}$, el tiempo de ensamblaje disminuye linealmente con el número de hilos OpenMP.
+\end{itemize}
+
+% --- SECCIÓN: ANÁLISIS PRELIMINAR DE DESEMPEÑO (CÓDIGOS EN CRUDO) ---
+
+\section{Análisis Preliminar de Desempeño: Códigos en Crudo}
+
+Antes de proceder con la optimización avanzada y la paralelización, se realizó un barrido sistemático de los cuatro métodos implementados utilizando un \textit{script} de automatización en Bash. Este análisis inicial permite identificar los cuellos de botella algorítmicos y el comportamiento de convergencia de cada técnica bajo una compilación estándar con \texttt{gfortran -O3}.
+
+\subsection{Comportamiento de Convergencia y Error Absoluto}
+
+A partir de los reportes generados, se observan tres regímenes de convergencia claramente diferenciados:
+
+\begin{enumerate}
+    \item \textbf{Convergencia Espectral (Sinc-DVR y Base Armónica):} Estos métodos muestran una caída drástica del error con un $N$ muy bajo ($N < 200$). Sin embargo, en el método \texttt{BASE\_ARM}, el error tiende a estancarse para niveles de energía superiores debido a la limitación de la base del oscilador para representar la anarmonicidad del potencial de Morse a grandes distancias.
+    \item \textbf{Convergencia Algebraica (FDM):} El método de Diferencias Finitas exhibe una reducción del error mucho más lenta, requiriendo mallas superiores a $N=5000$ para competir en precisión con los métodos espectrales. Esto confirma su naturaleza de aproximación local de segundo orden.
+    \item \textbf{Estabilidad en el Método de Disparo:} Aunque el error es bajo, el tiempo de CPU escala de manera lineal pero con una pendiente pronunciada debido a la naturaleza iterativa de la bisección para cada autovalor.
+\end{enumerate}
+
+\subsection{Costo Computacional y Escalabilidad Serial}
+
+El análisis del tiempo de CPU en escala Log-Log (ver paneles superiores de los reportes) revela las siguientes características de rendimiento:
+
+\begin{itemize}
+    \item \textbf{Métodos Matriciales (Sinc-DVR, FDM, Base):} Siguen una pendiente característica de $\mathcal{O}(N^3)$ en el tiempo de ejecución, dominada por la subrutina de diagonalización \texttt{DSYEV}. Para $N > 2000$, el costo se vuelve prohibitivo en una sola CPU.
+    \item \textbf{Inadecuación del Almacenamiento:} Los códigos actuales utilizan matrices densas incluso para operadores que son naturalmente ralas (como en FDM), lo que genera un desperdicio de ancho de banda de memoria y fallos de caché (\textit{cache misses}) al escalar $N$.
+\end{itemize}
+
+\subsection{Hacia la Optimización y Paralelización}
+
+Este diagnóstico preliminar evidencia que, si bien los códigos son físicamente correctos, carecen de las estrategias necesarias para aprovechar arquitecturas modernas como el procesador \textbf{AMD Ryzen Threadripper} disponible. 
+
+En las secciones posteriores, se detallará el proceso de transformación de estas implementaciones base mediante:
+\begin{itemize}
+    \item \textbf{Optimización Serial:} Reestructuración de bucles para mejorar la localidad de datos y uso de banderas de vectorización.
+    \item \textbf{Paralelización con OpenMP:} Distribución de la carga de trabajo en la construcción de matrices y en la búsqueda de raíces por disparo.
+    \item \textbf{Gestión de Memoria:} Transición hacia el uso eficiente de la jerarquía de cachés L1/L2/L3 para superar el cuello de botella del acceso a RAM.
+\end{itemize}
+
+
+\begin{figure}[H]
+    \centering
+    % Primera fila: Métodos Espectrales / Base
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/BASE_ARM_report.png}
+        \caption{Análisis de la Base Armónica: Se observa una convergencia veloz pero limitada por el tamaño de la base para niveles excitados.}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/SINC_DVR_report.png}
+        \caption{Reporte Sinc-DVR: El método más eficiente en precisión por punto, mostrando el error más bajo con $N$ reducido.}
+    \end{minipage}
+
+    \vspace{1cm} % Espacio entre filas
+
+    % Segunda fila: Métodos de Malla / EDO
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/FDM_MAT_report.png}
+        \caption{Diferencias Finitas (FDM): Se evidencia una convergencia algebraica lenta y un costo $O(N^3)$ dominante.}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/SHOOTING_report.png}
+        \caption{Método de Disparo: Estabilidad constante en el error con un costo computacional que escala linealmente por iteración.}
+    \end{minipage}
+
+    \label{fig:comparativa_cruda}
+\end{figure}
+
+\section{Optimización Serial y Jerarquía de Memoria}
+
+% --- SUBSECCIÓN: ANÁLISIS DE BANDERAS DE COMPILACIÓN Y VECTORIZACIÓN ---
+
+\subsection{Impacto de las Banderas de Compilación}
+
+Un pilar fundamental de la optimización serial en HPC es la correcta selección de las banderas del compilador. Se analizó el comportamiento de los cuatro códigos bajo los niveles \texttt{-O0} (sin optimización), \texttt{-O1}, \texttt{-O2} y \texttt{-O3} (optimización agresiva y vectorización).
+
+\subsubsection{Análisis de Vectorización y Logs del Compilador}
+
+Al examinar los archivos de diagnóstico \texttt{base\_O2.log} y \texttt{base\_O3.log}, se evidencia que el compilador \texttt{gfortran} logra identificar oportunidades de paralelismo a nivel de instrucción (ILP). En particular, para el método de transformación de bases, el log reporta:
+
+\begin{quote}
+    \texttt{optimized: loop vectorized using 32 byte vectors}
+\end{quote}
+
+Este mensaje es crítico: indica que se están utilizando registros \textbf{AVX2} de 32 bytes, permitiendo procesar 4 variables \texttt{REAL*8} simultáneamente en un solo ciclo de reloj. No obstante, se observó que en el paso de \texttt{-O2} a \texttt{-O3}, el compilador aplica \textit{loop unrolling} (desenrollado de bucles) que, en ciertos segmentos del método pseudo-espectral, causó una leve degradación debido a fallos en la jerarquía de caché, problema que fue mitigado mediante la reestructuración de los bucles anidados.
+
+\subsubsection{Comparativa de Tiempos Lineales}
+
+A continuación, se presentan los resultados del barrido de optimización. Se utiliza el especificador \texttt{[H]} del paquete \texttt{float} para garantizar la cohesión del análisis visual.
+
+\begin{figure}[H]
+    \centering
+    % Primera Fila
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/plot_base_linear.png}
+        \caption{Optimización en Base Armónica: Reducción drástica del tiempo entre \texttt{-O0} y \texttt{-O1}.}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/plot_sinc_linear.png}
+        \caption{Sinc-DVR: Se observa una convergencia de rendimiento entre \texttt{-O2} y \texttt{-O3}.}
+    \end{minipage}
+
+    \vspace{0.5cm}
+
+    % Segunda Fila
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/plot_fdm_linear.png}
+        \caption{FDM: El método muestra una mejora sostenida, aunque limitada por el acceso a memoria.}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/plot_shoot_linear.png}
+        \caption{Shooting: Máximo aprovechamiento de \texttt{-O3} debido a su naturaleza aritmética escalar.}
+    \end{minipage}
+\end{figure}
+
+
+
+\subsubsection{Discusión Técnica}
+
+Como se observa en las gráficas, el salto de \texttt{-O0} a \texttt{-O1} representa la mayor ganancia de desempeño en todos los métodos, eliminando redundancias en el código assembly. Sin embargo, el método de \textbf{Shooting} es el que mejor escala hacia \texttt{-O3}. Al ser un algoritmo de propagación punto a punto (Numerov), carece de las dependencias de memoria complejas de las matrices densas, permitiendo que la vectorización de 32 bytes sea altamente efectiva. 
+
+Por el contrario, en los métodos matriciales (\texttt{FDM} y \texttt{SINC}), la ganancia de \texttt{-O3} respecto a \texttt{-O2} es marginal. Esto sugiere que el sistema ha alcanzado un cuello de botella de \textbf{ancho de banda de memoria} (\textit{memory-bound}), donde el procesador es más rápido buscando datos que la memoria RAM entregándolos, lo que justifica el paso a la paralelización con OpenMP en la siguiente sección.
+\subsection{Estrategias de Localidad: Tiling}
+Se implementó \textit{tiling} (blocking) para mejorar el uso de la caché L1/L2. Mientras que en la FFT redujo el tiempo de 1.94s a 0.64s, en los métodos locales (Chebyshev/Lanczos) el impacto fue mínimo debido a que el tamaño de la malla ($N=2048$) reside naturalmente en la caché L1D (2 MiB) del procesador AMD Ryzen Threadripper.
+
+\section{Paralelización con OpenMP}
+
+\subsection{Análisis de Escalabilidad y Speedup}
+\begin{itemize}
+    \item \textbf{Speedup Superlineal:} Observado en Lanczos ($E_p > 1.0$), producto de la división del dominio que permite que los subconjuntos de datos quepan íntegramente en la caché rápida de cada núcleo.
+    \item \textbf{Ley de Amdahl:} El método de Cayley presentó un techo de escalabilidad ($S \approx 1.16$) debido a las dependencias de datos secuenciales en la solución del sistema tridiagonal.
+\end{itemize}
+
+\section{Conclusiones}
+La eficiencia en HPC no es solo una cuestión de hilos, sino de la simbiosis entre el modelo físico y la arquitectura. El Método de Lanczos emerge como la solución óptima para este problema debido a su localidad de datos y escalabilidad excepcional.
+
+\end{document}

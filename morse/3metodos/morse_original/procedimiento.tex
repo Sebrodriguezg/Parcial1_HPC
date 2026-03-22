@@ -1,0 +1,121 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+
+\geometry{margin=2.5cm}
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstset{
+    language=[Fixed]Fortran,
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
+\title{Determinación Numérica del Espectro del Potencial de Morse mediante Transformación de Bases}
+\author{Sebastián Rodríguez García}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducción y Formalismo}
+El objetivo es resolver la ecuación de Schrödinger estacionaria:
+\begin{equation}
+    \hat{H} |\psi\rangle = E |\psi\rangle
+\end{equation}
+donde $\hat{H} = \hat{T} + \hat{V}$. Para un potencial no lineal como el de Morse, $V(x) = D(1 - e^{-\beta x})^2$, el cálculo directo de los elementos matriciales $\langle i | \hat{V} | j \rangle$ en la base del oscilador armónico requeriría integrales analíticas complejas. El método de transformación de bases simplifica esto mediante el uso de la representación de posición discreta.
+
+\section{Paso 1: Construcción de Operadores en la Base del Oscilador}
+Partimos de la base de estados propios del oscilador armónico $\{|n\rangle\}$. Los operadores posición $\mathbb{X}$ y momento $\mathbb{P}$ tienen representaciones matriciales tridiagonales:
+\begin{equation}
+    X_{ij} = \frac{1}{\sqrt{2}}(\sqrt{j}\delta_{i,j-1} + \sqrt{i}\delta_{j,i-1})
+\end{equation}
+
+\begin{lstlisting}[caption=Inicialización de matrices en Fortran]
+      DO I=1,N-1
+         A_VAL=FLOAT(I)
+         X(I,I+1)=DSQRT(A_VAL/2.D0)
+         X(I+1,I)=X(I,I+1)
+         P(I,I+1)=-DSQRT(A_VAL/2.D0)
+         P(I+1,I)=DSQRT(A_VAL/2.D0)
+      END DO
+\end{lstlisting}
+
+\section{Paso 2: Diagonalización de $\mathbb{X}$ y Muestreo}
+La clave del método es encontrar una base donde el operador posición sea diagonal. Resolvemos el problema de valores propios:
+\begin{equation}
+    \mathbb{X} |x_\gamma\rangle = x_\gamma |x_\gamma\rangle
+\end{equation}
+Los autovalores $x_\gamma$ representan los puntos de la malla física. La matriz de autovectores $VP$ actúa como el operador de transformación entre la base de energía y la base de posición.
+
+\begin{lstlisting}
+      CALL EIGEN(X,N,N,E,VP,ATILDE,B,Z)
+\end{lstlisting}
+
+\section{Paso 3: Construcción del Potencial $V(\mathbb{X})$}
+Dado que el potencial es una función del operador posición, en la base donde $\mathbb{X}$ es diagonal, la matriz $V$ también lo es. Aplicamos la relación de clausura para regresar a nuestra base de trabajo:
+\begin{equation}
+    \langle i | V(\mathbb{X}) | j \rangle = \sum_{\gamma=1}^N \langle i | x_\gamma \rangle V(x_\gamma) \langle x_\gamma | j \rangle
+\end{equation}
+
+\begin{lstlisting}[caption=Construcción matricial del potencial]
+      DO I=1,N
+         DO J=I,N
+            SUM=0.D0
+            DO K=1,N
+               SUM=SUM + VP(I,K) * V_FUNC(E(K)) * VP(J,K)
+            END DO
+            VMAT(I,J)=SUM
+            VMAT(J,I)=SUM
+         END DO
+      END DO
+\end{lstlisting}
+
+\section{Paso 4: Energía Cinética y Hamiltoniano Final}
+La energía cinética se calcula mediante el producto de matrices $\mathbb{T} = \frac{1}{2}\mathbb{P}^2$. El Hamiltoniano total se construye sumando ambas contribuciones:
+\begin{equation}
+    \mathbb{H} = -\frac{1}{2} \mathbb{T} + \mathbb{V}
+\end{equation}
+
+\begin{lstlisting}
+      CALL MATMUT(P,P,T,N)
+      DO I=1,N
+         DO J=1,N
+            H(I,J) = -0.5D0 * T(I,J) + VMAT(I,J)
+         END DO
+      END DO
+\end{lstlisting}
+
+\section{Paso 5: Obtención del Espectro}
+La diagonalización final de $\mathbb{H}$ nos entrega los autovalores $E_\nu$, que corresponden a los niveles de energía acotados del potencial de Morse.
+
+\begin{lstlisting}
+      CALL EIGEN(H,N,N,E,VP,ATILDE,B,Z)
+\end{lstlisting}
+
+\end{document}
+

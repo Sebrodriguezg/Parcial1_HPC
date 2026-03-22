@@ -1,27 +1,40 @@
       PROGRAM MORSE_SHOOT
 C=======================================================================
 C     ESPECTRO DEL POTENCIAL DE MORSE VIA SHOOTING METHOD (RK4)
-C     COMPILACION: gfortran -ffixed-form morse_shoot.f -o morse_shoot
+C     VERSION ESTANDARIZADA PARA BENCHMARK HPC
 C=======================================================================
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       
+      CHARACTER*10 ARG_STR
+      INTEGER NSTEPS, LEVEL, ITER
+      DOUBLE PRECISION T1, T2, D_POT, ALPHA, XMIN, XMAX, DX
+      DOUBLE PRECISION E_CUR, E_MIN, E_MAX, DE, F_PREV, F_CUR
+      DOUBLE PRECISION EA, EB, FA, FMID, EMID
+      DOUBLE PRECISION EN_LEVELS(5)
+
+C     1. LECTURA DEL PARÁMETRO N (PASOS DE INTEGRACIÓN)
+      CALL GET_COMMAND_ARGUMENT(1, ARG_STR)
+      READ(ARG_STR, *) NSTEPS
+
+C     PARAMETROS FISICOS (Mantenidos del original)
       D_POT = 10.0D0
       ALPHA = 0.5D0
       XMIN  = -2.0D0
       XMAX  = 25.0D0 
-      NSTEPS = 12000  
-      DX = (XMAX - XMIN) / DFLOAT(NSTEPS)
+      DX = (XMAX - XMIN) / DBLE(NSTEPS)
       
       E_MIN = 0.0D0
       E_MAX = 10.0D0 
       DE    = 0.001D0 
-      
-      WRITE(6,*) 'NIVELES DE ENERGIA - POTENCIAL DE MORSE (RK4)'
-      
+
+C     --- INICIO DE MEDICIÓN ---
+      CALL CPU_TIME(T1)
+
       E_CUR = E_MIN
       F_PREV = FUN_WAVE(E_CUR, XMIN, XMAX, DX, NSTEPS, D_POT, ALPHA)
       LEVEL = 0
       
+C     2. BÚSQUEDA DE NIVELES (DISPARO + BISECCIÓN)
       DO WHILE (E_CUR .LT. E_MAX .AND. LEVEL .LT. 5)
          E_CUR = E_CUR + DE
          F_CUR = FUN_WAVE(E_CUR, XMIN, XMAX, DX, NSTEPS, D_POT, ALPHA)
@@ -29,27 +42,35 @@ C=======================================================================
          IF (F_PREV * F_CUR .LT. 0.D0) THEN
             EA = E_CUR - DE
             EB = E_CUR
-            F_A = F_PREV
+            FA = F_PREV
             
             DO 10 ITER=1, 100 
                EMID = 0.5D0 * (EA + EB)
                FMID = FUN_WAVE(EMID,XMIN,XMAX,DX,NSTEPS,D_POT,ALPHA)
-               IF (F_A * FMID .LT. 0.D0) THEN
+               IF (FA * FMID .LT. 0.D0) THEN
                   EB = EMID
                ELSE
                   EA = EMID
-                  F_A = FMID
+                  FA = FMID
                END IF
-   10       CONTINUE
-            WRITE(6,100) LEVEL, EMID
+ 10         CONTINUE
+            
             LEVEL = LEVEL + 1
+            IF (LEVEL .LE. 5) EN_LEVELS(LEVEL) = EMID
          END IF
          F_PREV = F_CUR
       END DO
-      
-  100 FORMAT(' Nivel n = ', I1, ' | Energia E = ', F14.10)
+
+C     --- FIN DE MEDICIÓN ---
+      CALL CPU_TIME(T2)
+
+C     3. SALIDA ESTANDARIZADA (N, E0, E1, E2, E3, E4, TIEMPO)
+      WRITE(*,100) NSTEPS, (EN_LEVELS(I), I=1,4), (T2-T1)
+100   FORMAT(I8, 5(1X, F20.12))
+
       END
 
+C=======================================================================
       DOUBLE PRECISION FUNCTION FUN_WAVE(EN, X0, XF, H, N, D, ALP)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       
@@ -80,16 +101,18 @@ C=======================================================================
      &         2.0D0*RK3_PHI + RK4_PHI)
          X = X + H
          
+C        Normalización preventiva para evitar desbordamiento (Overflow)
          IF (DABS(PSI) .GT. 1.0D15) THEN
             PHI = PHI / 1.0D15
             PSI = PSI / 1.0D15
          END IF
-   20 CONTINUE
+ 20   CONTINUE
       
       FUN_WAVE = PSI
       RETURN
       END
 
+C=======================================================================
       DOUBLE PRECISION FUNCTION V_MORSE(X, D, ALP)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       V_MORSE = D * (1.0D0 - DEXP(-ALP * X))**2

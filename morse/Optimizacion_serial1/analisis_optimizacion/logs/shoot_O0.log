@@ -1,0 +1,5 @@
+/usr/bin/ld: /tmp/ccJT25kP.o: in function `fun_wave':
+morse_shoot.c:(.text+0xa0): undefined reference to `v_morse'
+/usr/bin/ld: morse_shoot.c:(.text+0x10c): undefined reference to `v_morse'
+/usr/bin/ld: morse_shoot.c:(.text+0x205): undefined reference to `v_morse'
+collect2: error: ld returned 1 exit status
