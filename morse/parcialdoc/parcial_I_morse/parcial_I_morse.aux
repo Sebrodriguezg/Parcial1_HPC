@@ -55,7 +55,68 @@
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Shooting: Máximo aprovechamiento de \texttt  {-O3} debido a su naturaleza aritmética escalar.}}{11}{figure.8}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.3}Discusión Técnica}{11}{subsubsection.4.1.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Estrategias de Localidad: Tiling}{12}{subsection.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {5}Paralelización con OpenMP}{12}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Análisis de Escalabilidad y Speedup}{12}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusiones}{12}{section.6}\protected@file@percent }
-\gdef \@abspage@last{12}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Análisis de Logs de Compilación y Optimización de Código}{12}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.1}Metodología de Extracción de Datos}{12}{subsubsection.4.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.2}Interpretación de Resultados Técnicos}{12}{subsubsection.4.3.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Comparativa de Complejidad de Control vs. Optimización}}{13}{table.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.3}Conclusión del Análisis de Compilación}{13}{subsubsection.4.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Optimización Serial del Método de Transformación de Bases}{13}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.1}Alineación de Memoria y Gestión Robusta}{13}{subsubsection.4.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.2}Inline de la Función de Potencial}{13}{subsubsection.4.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.3}Precomputación del Potencial}{13}{subsubsection.4.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.4}Uso de BLAS para Multiplicación Matricial}{14}{subsubsection.4.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.5}Vectorización Explícita mediante SIMD}{14}{subsubsection.4.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.6}Mejora de Localidad de Memoria}{14}{subsubsection.4.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.7}Aprovechamiento de Simetría}{14}{subsubsection.4.4.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.8}Optimización del Ensamblaje del Hamiltoniano}{15}{subsubsection.4.4.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.9}Consideraciones sobre la Diagonalización}{15}{subsubsection.4.4.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.10}Impacto Global de las Optimizaciones}{15}{subsubsection.4.4.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Impacto de las Optimizaciones en el Método de Diferencias Finitas}{15}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.1}Optimización a Nivel de Implementación}{15}{subsubsection.4.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.2}Optimización Algorítmica: Uso de Matriz Tridiagonal}{16}{subsubsection.4.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.3}Reducción de Complejidad Computacional}{16}{subsubsection.4.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.4}Reducción del Uso de Memoria}{16}{subsubsection.4.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.5}Impacto Experimental en el Tiempo de Ejecución}{17}{subsubsection.4.5.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Comparación de tiempos entre implementación densa y tridiagonal}}{17}{table.2}\protected@file@percent }
+\newlabel{tab:fdm_speedup}{{2}{17}{Comparación de tiempos entre implementación densa y tridiagonal}{table.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.6}Discusión}{17}{subsubsection.4.5.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.7}Conclusión}{17}{subsubsection.4.5.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Optimización Serial del Método Shooting}{17}{subsection.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.1}Optimización a Nivel de Implementación}{18}{subsubsection.4.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.2}Limitaciones del Método RK4}{18}{subsubsection.4.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.3}Optimización Algorítmica: Método de Numerov}{18}{subsubsection.4.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.4}Ventajas del Método de Numerov}{18}{subsubsection.4.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.5}Optimización del Método de Búsqueda de Energías}{19}{subsubsection.4.6.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.6}Impacto Experimental en el Tiempo de Ejecución}{19}{subsubsection.4.6.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Comparación entre RK4 y Numerov en el método de disparo}}{19}{table.3}\protected@file@percent }
+\newlabel{tab:shoot_speedup}{{3}{19}{Comparación entre RK4 y Numerov en el método de disparo}{table.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.7}Discusión}{19}{subsubsection.4.6.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.8}Conclusión}{19}{subsubsection.4.6.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}Optimización Serial del Método Sinc-DVR}{20}{subsection.4.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.1}Optimización a Nivel de Implementación}{20}{subsubsection.4.7.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.2}Análisis de Complejidad}{21}{subsubsection.4.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.3}Impacto Experimental en el Tiempo de Ejecución}{21}{subsubsection.4.7.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Comparación de tiempos para el método Sinc-DVR}}{21}{table.4}\protected@file@percent }
+\newlabel{tab:sinc_speedup}{{4}{21}{Comparación de tiempos para el método Sinc-DVR}{table.4}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.4}Discusión}{21}{subsubsection.4.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.5}Perspectivas de Optimización Avanzada}{21}{subsubsection.4.7.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.6}Conclusión}{22}{subsubsection.4.7.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.8}Análisis del Impacto de la Optimización Serial y Comparativa de Rendimiento}{22}{subsection.4.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.1}Método de Diferencias Finitas (FDM): El Salto de $O(N^3)$ a $O(N^2)$}{22}{subsubsection.4.8.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Comparativa de tiempo de ejecución para el método FDM: Implementación Densa vs. Tridiagonal Optimizada.}}{23}{figure.9}\protected@file@percent }
+\newlabel{fig:fdm_comp}{{9}{23}{Comparativa de tiempo de ejecución para el método FDM: Implementación Densa vs. Tridiagonal Optimizada}{figure.9}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.2}Sinc-DVR: Optimización de la Intensidad Aritmética}{23}{subsubsection.4.8.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Efecto de la optimización serial en el método Sinc-DVR.}}{24}{figure.10}\protected@file@percent }
+\newlabel{fig:sinc_comp}{{10}{24}{Efecto de la optimización serial en el método Sinc-DVR}{figure.10}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.3}Método de Shooting: Eficiencia en la Integración de ODEs}{24}{subsubsection.4.8.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Rendimiento del método de Shooting tras la optimización de la rutina de integración.}}{25}{figure.11}\protected@file@percent }
+\newlabel{fig:shoot_comp}{{11}{25}{Rendimiento del método de Shooting tras la optimización de la rutina de integración}{figure.11}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.4}Comparativa Global y Eficiencia de Hardware}{25}{subsubsection.4.8.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Resumen comparativo del Speedup serial alcanzado en los diferentes métodos numéricos.}}{26}{figure.12}\protected@file@percent }
+\newlabel{fig:base_comp}{{12}{26}{Resumen comparativo del Speedup serial alcanzado en los diferentes métodos numéricos}{figure.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Resumen de métricas de optimización serial.}}{26}{table.5}\protected@file@percent }
+\newlabel{tab:resumen_opt}{{5}{26}{Resumen de métricas de optimización serial}{table.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Paralelización con OpenMP}{27}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Análisis de Escalabilidad y Speedup}{27}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusiones}{27}{section.6}\protected@file@percent }
+\gdef \@abspage@last{27}

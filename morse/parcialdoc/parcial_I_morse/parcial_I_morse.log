@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.1.5)  21 MAR 2026 19:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.1.5)  23 MAR 2026 22:38
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -570,22 +570,22 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 [7]
 
 [8]
-<figures/BASE_ARM_report.png, id=279, 1003.75pt x 903.375pt>
+<figures/BASE_ARM_report.png, id=468, 1003.75pt x 903.375pt>
 File: figures/BASE_ARM_report.png Graphic file (type png)
 <use figures/BASE_ARM_report.png>
 Package pdftex.def Info: figures/BASE_ARM_report.png  used on input line 353.
 (pdftex.def)             Requested size: 226.57297pt x 203.91225pt.
-<figures/SINC_DVR_report.png, id=280, 1003.75pt x 903.375pt>
+<figures/SINC_DVR_report.png, id=469, 1003.75pt x 903.375pt>
 File: figures/SINC_DVR_report.png Graphic file (type png)
 <use figures/SINC_DVR_report.png>
 Package pdftex.def Info: figures/SINC_DVR_report.png  used on input line 359.
 (pdftex.def)             Requested size: 226.57297pt x 203.91225pt.
-<figures/FDM_MAT_report.png, id=281, 1003.75pt x 903.375pt>
+<figures/FDM_MAT_report.png, id=470, 1003.75pt x 903.375pt>
 File: figures/FDM_MAT_report.png Graphic file (type png)
 <use figures/FDM_MAT_report.png>
 Package pdftex.def Info: figures/FDM_MAT_report.png  used on input line 368.
 (pdftex.def)             Requested size: 226.57297pt x 203.91225pt.
-<figures/SHOOTING_report.png, id=282, 1003.75pt x 903.375pt>
+<figures/SHOOTING_report.png, id=471, 1003.75pt x 903.375pt>
 File: figures/SHOOTING_report.png Graphic file (type png)
 <use figures/SHOOTING_report.png>
 Package pdftex.def Info: figures/SHOOTING_report.png  used on input line 374.
@@ -618,22 +618,22 @@ s been already used, duplicate ignored
 l.388 
        <./figures/BASE_ARM_report.png> <./figures/SINC_DVR_report.png> <./figur
 es/FDM_MAT_report.png> <./figures/SHOOTING_report.png>]
-<figures/plot_base_linear.png, id=291, 1003.75pt x 702.625pt>
+<figures/plot_base_linear.png, id=480, 1003.75pt x 702.625pt>
 File: figures/plot_base_linear.png Graphic file (type png)
 <use figures/plot_base_linear.png>
 Package pdftex.def Info: figures/plot_base_linear.png  used on input line 408.
 (pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
-<figures/plot_sinc_linear.png, id=292, 1003.75pt x 702.625pt>
+<figures/plot_sinc_linear.png, id=481, 1003.75pt x 702.625pt>
 File: figures/plot_sinc_linear.png Graphic file (type png)
 <use figures/plot_sinc_linear.png>
 Package pdftex.def Info: figures/plot_sinc_linear.png  used on input line 414.
 (pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
-<figures/plot_fdm_linear.png, id=293, 1003.75pt x 702.625pt>
+<figures/plot_fdm_linear.png, id=482, 1003.75pt x 702.625pt>
 File: figures/plot_fdm_linear.png Graphic file (type png)
 <use figures/plot_fdm_linear.png>
 Package pdftex.def Info: figures/plot_fdm_linear.png  used on input line 423.
 (pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
-<figures/plot_shoot_linear.png, id=294, 1003.75pt x 702.625pt>
+<figures/plot_shoot_linear.png, id=483, 1003.75pt x 702.625pt>
 File: figures/plot_shoot_linear.png Graphic file (type png)
 <use figures/plot_shoot_linear.png>
 Package pdftex.def Info: figures/plot_shoot_linear.png  used on input line 429.
@@ -648,29 +648,171 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.443 
+l.444 
       
 pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.443 
+l.444 
       
 pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.443 
+l.444 
       
 pdfTeX warning (ext4): destination with the same identifier (name{figure.8}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.443 
+l.444 
        <./figures/plot_base_linear.png> <./figures/plot_sinc_linear.png> <./fig
 ures/plot_fdm_linear.png> <./figures/plot_shoot_linear.png>]
+LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10.95> not available
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 465.
 
-[12] (./parcial_I_morse.aux
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
+
+
+[12]
+
+[13
+pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.521 \subsubsection
+                    {Uso de BLAS para Multiplicación Matricial}]
+
+[14]
+
+[15]
+
+[16]
+
+[17
+pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.723     \item I
+                 nline de la función de potencial para evitar overhead de l...
+]
+
+[18]
+
+[19
+pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.836 
+      ]
+
+[20]
+
+[21
+pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.940 \subsubsection
+                    {Conclusión}]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 956.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `superscript' on input line 956.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 956.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 956.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `superscript' on input line 956.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 956.
+
+<figures/fdm_comp.png, id=551, 1003.75pt x 1204.5pt>
+File: figures/fdm_comp.png Graphic file (type png)
+<use figures/fdm_comp.png>
+Package pdftex.def Info: figures/fdm_comp.png  used on input line 964.
+(pdftex.def)             Requested size: 330.42041pt x 396.51213pt.
+
+
+[22]
+<figures/sinc_comp.png, id=558, 1003.75pt x 1204.5pt>
+File: figures/sinc_comp.png Graphic file (type png)
+<use figures/sinc_comp.png>
+Package pdftex.def Info: figures/sinc_comp.png  used on input line 981.
+(pdftex.def)             Requested size: 330.42041pt x 396.51213pt.
+
+
+[23
+pdfTeX warning (ext4): destination with the same identifier (name{figure.9}) ha
+s been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.985 
+       <./figures/fdm_comp.png>]
+<figures/shoot_comp.png, id=566, 1003.75pt x 1204.5pt>
+File: figures/shoot_comp.png Graphic file (type png)
+<use figures/shoot_comp.png>
+Package pdftex.def Info: figures/shoot_comp.png  used on input line 992.
+(pdftex.def)             Requested size: 330.42041pt x 396.51213pt.
+
+
+[24
+pdfTeX warning (ext4): destination with the same identifier (name{figure.10}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.996 
+       <./figures/sinc_comp.png>]
+<figures/base_comp.png, id=573, 1003.75pt x 1204.5pt>
+File: figures/base_comp.png Graphic file (type png)
+<use figures/base_comp.png>
+Package pdftex.def Info: figures/base_comp.png  used on input line 1003.
+(pdftex.def)             Requested size: 377.62642pt x 453.15672pt.
+
+
+[25
+pdfTeX warning (ext4): destination with the same identifier (name{figure.11}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1007 
+        <./figures/shoot_comp.png>]
+
+[26
+pdfTeX warning (ext4): destination with the same identifier (name{figure.12}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1028     \item \textbf
+                        {Ley de Amdahl:} El método de Cayley presentó un t...
+
+pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1028     \item \textbf
+                        {Ley de Amdahl:} El método de Cayley presentó un t...
+ <./figures/base_comp.png>]
+
+[27] (./parcial_I_morse.aux
 LaTeX Info: Redefining \. on input line 11.
 LaTeX Info: Redefining \% on input line 11.
 )
@@ -680,42 +822,40 @@ L3 programming layer <2025-01-18>
  ***********
 
 
-Package rerunfilecheck Warning: File `parcial_I_morse.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
-Package rerunfilecheck Info: Checksums for `parcial_I_morse.out':
-(rerunfilecheck)             Before: E61D6DDEE4EEC56E9483253BBA4A959E;8848
-(rerunfilecheck)             After:  D485520FBF8A6C469F50AF1C2FCCF3E0;9653.
+Package rerunfilecheck Info: File `parcial_I_morse.out' has not changed.
+(rerunfilecheck)             Checksum: 712B0FDD91D12BCBEA1F6000053CAA7E;21543.
  ) 
 Here is how much of TeX's memory you used:
- 15173 strings out of 473197
- 227458 string characters out of 5718606
+ 15339 strings out of 473197
+ 230592 string characters out of 5718606
  984464 words of memory out of 5000000
- 38091 multiletter control sequences out of 15000+600000
- 567539 words of font info for 69 fonts, out of 8000000 for 9000
+ 38184 multiletter control sequences out of 15000+600000
+ 567898 words of font info for 70 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 79i,11n,93p,588b,2018s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 79i,11n,93p,688b,2018s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
-e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texl
-ive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/te
-xmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texlive/texmf-dis
-t/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts
-/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/
-public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/
-amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfont
-s/cm/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
-8.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/s
-hare/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/te
-xlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/
-texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-
-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on parcial_I_morse.pdf (12 pages, 607515 bytes).
+e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbxti10.pfb></usr/share/te
+xlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></usr/share/texlive/
+texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-
+dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/share/texlive/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmmi8.pfb></usr/share/texlive/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1/publ
+ic/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsf
+onts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmr6.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pf
+b></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></us
+r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share
+/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/share/texliv
+e/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist
+/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on parcial_I_morse.pdf (27 pages, 929606 bytes).
 PDF statistics:
- 420 PDF objects out of 1000 (max. 8388607)
- 360 compressed objects within 4 object streams
- 153 named destinations out of 1000 (max. 500000)
- 289 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 716 PDF objects out of 1000 (max. 8388607)
+ 632 compressed objects within 7 object streams
+ 225 named destinations out of 1000 (max. 500000)
+ 685 words of extra memory for PDF output out of 10000 (max. 10000000)
 
