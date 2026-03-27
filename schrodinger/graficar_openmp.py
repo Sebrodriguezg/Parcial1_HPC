@@ -19,8 +19,11 @@ marcadores = ['o', 's', '^', 'D']
 fig_speedup, ax_sp = plt.subplots(figsize=(8, 6))
 fig_eficiencia, ax_ef = plt.subplots(figsize=(8, 6))
 
+# Arreglo dinámico de hilos basado en tus datos reales
+hilos_totales = [1, 2, 4, 8, 16, 24, 32, 40]
+hilos_ideales = np.array(hilos_totales)
+
 # Linea de Speedup ideal (Lineal)
-hilos_ideales = np.array([1, 2, 4])
 ax_sp.plot(hilos_ideales, hilos_ideales, 'k--', label='Speedup Ideal (Lineal)')
 
 # Linea de Eficiencia ideal (1.0)
@@ -31,7 +34,6 @@ for nombre, ruta in archivos_config.items():
     if os.path.exists(ruta):
         df = pd.read_csv(ruta)
         
-        # Asumiendo que las filas están ordenadas por Hilos: 1, 2, 4
         # Ordenamos por si acaso
         df = df.sort_values(by='Hilos')
         hilos = df['Hilos'].values
@@ -56,17 +58,17 @@ for nombre, ruta in archivos_config.items():
 ax_sp.set_title('Speedup vs Número de Hilos (OpenMP)', fontsize=14, weight='bold')
 ax_sp.set_xlabel('Número de Hilos (p)', fontsize=12)
 ax_sp.set_ylabel('Speedup ($S_p$)', fontsize=12)
-ax_sp.set_xticks([1, 2, 4])
+ax_sp.set_xticks(hilos_totales) # Muestra exactamente los hilos medidos
 ax_sp.legend()
 fig_speedup.tight_layout()
-os.makedirs('img', exist_ok=True) # Carpeta raiz img/ para guardar estas generales
+os.makedirs('img', exist_ok=True)
 fig_speedup.savefig('img/openmp_speedup_comparativo.png', dpi=300)
 
 # Configuracion final Eficiencia
 ax_ef.set_title('Eficiencia Paralela vs Número de Hilos (OpenMP)', fontsize=14, weight='bold')
 ax_ef.set_xlabel('Número de Hilos (p)', fontsize=12)
 ax_ef.set_ylabel('Eficiencia ($E_p$)', fontsize=12)
-ax_ef.set_xticks([1, 2, 4])
+ax_ef.set_xticks(hilos_totales) # Muestra exactamente los hilos medidos
 ax_ef.legend()
 fig_eficiencia.tight_layout()
 fig_eficiencia.savefig('img/openmp_eficiencia_comparativa.png', dpi=300)

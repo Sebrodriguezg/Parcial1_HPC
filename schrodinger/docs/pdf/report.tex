@@ -38,29 +38,45 @@ La dinámica del sistema se estudia evaluando la evolución temporal de un estad
 
 Desde la perspectiva de la física computacional, el desafío radica en aplicar el operador de evolución temporal $\hat{U}(t) = e^{-i\hat{H}t}$ de manera discreta. Para que la solución numérica sea físicamente rigurosa, el método seleccionado debe ser estrictamente unitario, garantizando así la conservación de la probabilidad ($\int |\psi(x,t)|^2 dx = 1$) en cada paso de tiempo computado.
 
+
 \section{Justificación de los Métodos Numéricos}
 La selección de los esquemas numéricos para integrar la ecuación de Schrödinger dependiente del tiempo es fundamental, dado que distintas formulaciones conducen a estructuras computacionales que impactan directamente el rendimiento y uso de caché. A continuación, se justifican los métodos seleccionados bajo criterios físicos, matemáticos y de complejidad algorítmica.
 
 \subsection{Método 1 (Base): Pseudo-Espectral (Split-Operator con FFT)}
-Este método separa el operador de evolución en sus componentes de energía cinética y potencial. Utiliza la Transformada Rápida de Fourier (FFT) para evaluar la acción del operador cinético en el espacio de momentos.
+Este método separa el operador de evolución en sus componentes de energía cinética ($\hat{K}$) y potencial ($\hat{V}$). Utiliza la Transformada Rápida de Fourier (FFT) para evaluar la acción del operador cinético en el espacio de momentos, aplicando la aproximación:
+$$ \psi(x, t+\Delta t) \approx e^{-i \hat{V} \Delta t / 2} \mathcal{F}^{-1} \left\{ e^{-i \hat{K} \Delta t} \mathcal{F} \{ \psi(x,t) \} \right\} e^{-i \hat{V} \Delta t / 2} $$
 \begin{itemize}
     \item \textbf{Estabilidad y Convergencia:} Es incondicionalmente estable y estrictamente unitario (conserva la norma de la función de onda). Presenta convergencia espectral (el error espacial decae exponencialmente).
     \item \textbf{Complejidad Algorítmica:} Dominada por la FFT, escalando como $\mathcal{O}(N \log N)$, donde $N$ es el tamaño de la malla espacial. Computacionalmente, sufre de baja localidad espacial debido a los saltos de memoria requeridos por la FFT.
 \end{itemize}
 
-\subsection{Método Propuesto A: Expansión Polinomial de Chebyshev}
-Sustituye la aproximación de diferencias finitas temporales expandiendo el operador de evolución unitaria $e^{-i\hat{H}\Delta t}$ en una base de polinomios de Chebyshev de primera especie. Se discretiza espacialmente el Hamiltoniano mediante diferencias finitas para favorecer la localidad de datos.
+\subsection{Método 2 (Base): Aproximación de Cayley}
+Este método emplea la transformada de Cayley para aproximar el operador de evolución temporal, lo que resulta en un esquema implícito de diferencias finitas análogo al método de Crank-Nicolson:
+$$ e^{-i\hat{H}\Delta t} \approx \frac{1 - i\hat{H}\Delta t / 2}{1 + i\hat{H}\Delta t / 2} $$
+Computacionalmente, esto requiere resolver un sistema lineal tridiagonal algebraico en cada paso de tiempo:
+$$ \left(1 + i \frac{\Delta t}{2} \hat{H}\right) \psi(x, t+\Delta t) = \left(1 - i \frac{\Delta t}{2} \hat{H}\right) \psi(x,t) $$
 \begin{itemize}
-    \item \textbf{Estabilidad y Convergencia:} Altamente estable siempre que el espectro del Hamiltoniano sea correctamente normalizado al intervalo $[-1, 1]$. El error temporal converge exponencialmente, permitiendo pasos de tiempo ($\Delta t$) significativamente mayores que los métodos estándar.
-    \item \textbf{Complejidad Algorítmica:} Escala como $\mathcal{O}(M \cdot N)$, donde $M$ es el orden del polinomio. Al usar diferencias finitas para la acción de $\hat{H}$, los accesos a memoria son puramente locales, lo que lo hace un candidato ideal para optimización de memoria caché y vectorización.
+    \item \textbf{Estabilidad y Convergencia:} Es estrictamente unitario e incondicionalmente estable. El error de truncamiento temporal es de segundo orden $\mathcal{O}(\Delta t^2)$.
+    \item \textbf{Complejidad Algorítmica:} Escala linealmente $\mathcal{O}(N)$ gracias al uso de algoritmos eficientes para matrices tridiagonales (como el algoritmo de Thomas). Sin embargo, la naturaleza implícita del sistema introduce fuertes dependencias algorítmicas de datos que limitan severamente su paralelización.
+\end{itemize}
+
+\subsection{Método Propuesto A: Expansión Polinomial de Chebyshev}
+Sustituye la aproximación de diferencias finitas temporales expandiendo el operador de evolución unitaria en una base de polinomios de Chebyshev complejos. Discretizando espacialmente el Hamiltoniano normalizado $\hat{H}_{norm}$, la acción sobre la función de onda se evalúa como:
+$$ \psi(x, t+\Delta t) \approx e^{-i E_{avg} \Delta t} \sum_{k=0}^{M} c_k \phi_k(x) $$
+donde los coeficientes dependen de las funciones de Bessel de primera especie $c_k = 2(-i)^k J_k(\alpha)$, y $\phi_k$ se obtienen mediante una relación de recurrencia tridiagonal.
+\begin{itemize}
+    \item \textbf{Estabilidad y Convergencia:} Altamente estable siempre que el espectro del Hamiltoniano sea correctamente normalizado al intervalo $[-1, 1]$. El error temporal converge exponencialmente.
+    \item \textbf{Complejidad Algorítmica:} Escala como $\mathcal{O}(M \cdot N)$, donde $M$ es el orden de expansión. Al usar diferencias finitas para la acción de $\hat{H}$, los accesos a memoria son puramente locales, ideal para optimización de caché y vectorización SIMD.
 \end{itemize}
 
 \subsection{Método Propuesto B: Subespacios de Krylov (Método de Lanczos)}
-En lugar de una expansión polinomial global, este método construye una base ortonormal reducida (espacio de Krylov) adaptada al estado instantáneo de la función de onda, tridiagonalizando el Hamiltoniano en dicho subespacio.
+Este método construye una base ortonormal reducida (espacio de Krylov) de dimensión $m$ adaptada al estado instantáneo de la función de onda. El Hamiltoniano global se proyecta y tridiagonaliza en este subespacio reducido ($T_m = V_m^\dagger \hat{H} V_m$), aproximando la evolución como:
+$$ \psi(x, t+\Delta t) \approx V_m e^{-i T_m \Delta t} V_m^\dagger \psi(x,t) $$
 \begin{itemize}
-    \item \textbf{Estabilidad y Convergencia:} Es un método unitario (preserva fuertemente la probabilidad) y altamente estable. La aproximación es casi exacta dentro del subespacio generado.
-    \item \textbf{Complejidad Algorítmica:} La construcción del subespacio de dimensión $m$ requiere $m$ aplicaciones del Hamiltoniano, escalando como $\mathcal{O}(m \cdot N)$. La diagonalización de la matriz reducida es $\mathcal{O}(m^3)$, pero como usualmente $m \ll N$ (e.g., $m=10$), este costo es despreciable. Su rendimiento computacional se beneficia de operaciones densas vector-vector tipo BLAS nivel 1 y 2.
+    \item \textbf{Estabilidad y Convergencia:} Es un método fuertemente unitario y altamente estable. La aproximación de la propagación es casi exacta dentro del subespacio generado.
+    \item \textbf{Complejidad Algorítmica:} Requiere $m$ aplicaciones del Hamiltoniano, escalando como $\mathcal{O}(m \cdot N)$. La diagonalización de la matriz reducida es $\mathcal{O}(m^3)$, un costo despreciable ya que típicamente $m \ll N$. Se beneficia enormemente de operaciones densas de álgebra lineal tipo BLAS.
 \end{itemize}
+
 
 \section{Análisis de Optimización Serial}
 \label{sec:opt_serial}
@@ -163,25 +179,28 @@ Esta divergencia demuestra que la optimización del uso de caché no es una solu
 
 Una vez agotadas las estrategias de optimización serial, se procedió a paralelizar las regiones críticas de los algoritmos utilizando el estándar OpenMP para arquitecturas de memoria compartida. Se añadieron directivas \texttt{!\$omp parallel do} en los bucles más costosos, garantizando la correcta privatización de variables temporales e índices de bucles internos para evitar condiciones de carrera (\textit{race conditions}).
 
-Para evaluar el desempeño, se ejecutaron pruebas variando el número de hilos ($p = 1, 2, 4$) y se calcularon métricas estándar de HPC: la aceleración o \textit{Speedup} ($S_p = T_1 / T_p$) y la Eficiencia Paralela ($E_p = S_p / p$). Los resultados consolidados se muestran en el Cuadro \ref{tab:openmp_metrics}.
+Para evaluar el desempeño, se ejecutaron pruebas variando el número de hilos ($p = 1, 2, 4, 8, 16, 24, 32, 40$) y se calcularon métricas estándar de HPC: la aceleración o \textit{Speedup} ($S_p = T_1 / T_p$) y la Eficiencia Paralela ($E_p = S_p / p$). El comportamiento de escalabilidad completo hasta saturar los núcleos del procesador se detalla visualmente en la Figura \ref{fig:openmp_metrics}.
 
-\begin{table}[h]
-\centering
-\caption{Tiempos de ejecución ($T_p$ en segundos), Speedup ($S_p$) y Eficiencia Paralela ($E_p$) para distintos números de hilos de ejecución ($p$).}
-\label{tab:openmp_metrics}
-\resizebox{\textwidth}{!}{
-\begin{tabular}{l|ccc|ccc|ccc}
-\toprule
- & \multicolumn{3}{c|}{\textbf{$p = 1$ Hilo}} & \multicolumn{3}{c|}{\textbf{$p = 2$ Hilos}} & \multicolumn{3}{c}{\textbf{$p = 4$ Hilos}} \\
-\textbf{Método} & \textbf{$T_1$ (s)} & \textbf{$S_1$} & \textbf{$E_1$} & \textbf{$T_2$ (s)} & \textbf{$S_2$} & \textbf{$E_2$} & \textbf{$T_4$ (s)} & \textbf{$S_4$} & \textbf{$E_4$} \\
-\midrule
-\textbf{1. Pseudo-espectral} & 269.16 & 1.00 & 1.00 & 167.06 & 1.61 & 0.81 & 122.49 & 2.20 & 0.55 \\
-\textbf{2. Cayley}           & 23.56  & 1.00 & 1.00 & 21.98  & 1.07 & 0.54 & 20.32  & 1.16 & 0.29 \\
-\textbf{3. Chebyshev}        & 54.44  & 1.00 & 1.00 & 28.52  & 1.91 & 0.95 & 15.22  & 3.58 & 0.89 \\
-\textbf{4. Krylov-Lanczos}   & 1319.64& 1.00 & 1.00 & 546.25 & 2.41 & 1.21 & 285.42 & 4.62 & 1.15 \\
-\bottomrule
-\end{tabular}}
-\end{table}
+Para ilustrar el enfoque de paralelización adoptado, a continuación se presenta el bloque de código correspondiente al cálculo de la norma en el Método de Krylov-Lanczos. Se destaca el uso de la directiva \texttt{default(none)} para forzar la declaración explícita del alcance de cada variable, mitigando riesgos de acceso concurrente indebido.
+
+Asimismo, se empleó la cláusula \texttt{reduction} para evitar condiciones de carrera (\textit{race conditions}) durante la acumulación de la parte real e imaginaria del producto punto:
+
+\begin{verbatim}
+    dot_prod_real = 0.0_dp
+    dot_prod_imag = 0.0_dp
+
+    !$omp parallel do reduction(+:dot_prod_real, dot_prod_imag) &
+    !$omp private(i, dot_prod_local) shared(psi, npts) default(none)
+    do i = 1, npts-1
+      dot_prod_local = conjg(psi(i)) * psi(i)
+      dot_prod_real = dot_prod_real + real(dot_prod_local, dp)
+      dot_prod_imag = dot_prod_imag + aimag(dot_prod_local)
+    end do
+
+    norm_psi = sqrt(dot_prod_real * dx)
+\end{verbatim}
+
+Esta rigurosidad en la privatización (\texttt{dot\_prod\_local}, \texttt{i}) y compartición (\texttt{psi}, \texttt{npts}) de datos fue la clave fundamental para lograr el comportamiento de escalabilidad limpio y sin bloqueos de memoria que se discute a continuación.
 
 \subsection{Análisis de Escalabilidad y Ley de Amdahl}
 
@@ -189,13 +208,13 @@ El comportamiento de escalabilidad de los cuatro métodos refleja de manera dire
 
 \begin{itemize}
     \item \textbf{Speedup Superlineal (Krylov-Lanczos):} De manera notable, el Método 4 exhibió un comportamiento superlineal ($E_p > 1.0$). Al pasar de 1 a 4 hilos, el tiempo se redujo en un factor de 4.62. Este fenómeno es un efecto clásico de la jerarquía de memoria: al dividir el dominio de la malla computacional entre varios hilos, el subconjunto de datos (\textit{working set}) asignado a cada núcleo se vuelve lo suficientemente pequeño para caber íntegramente en los niveles más bajos y rápidos de la memoria caché (L1/L2). Esto reduce drásticamente los ciclos perdidos esperando lecturas de RAM que ocurrían en la ejecución secuencial pura.
-    
+
     \item \textbf{Escalamiento Ideal (Chebyshev):} El Método 3 escaló casi de manera ideal ($E_4 = 0.89$). La expansión polinomial y las diferencias finitas se traducen en bucles paralelos densos (operaciones vector-vector) donde cada iteración es estrictamente independiente de las demás (\textit{embarrassingly parallel}), minimizando el \textit{overhead} de sincronización.
-    
+
     \item \textbf{Fracción Serial y Dependencias (Cayley y FFT):} En fuerte contraste, el Método 2 (Cayley) mostró un escalamiento pobre, estancándose en un \textit{speedup} de 1.16 con 4 hilos. La aproximación de Cayley suele requerir la solución de sistemas tridiagonales implícitos en cada paso de tiempo, lo que introduce dependencias de datos que impiden una paralelización directa de los bucles internos. Según la Ley de Amdahl ($S \leq 1/s$), la gran fracción puramente secuencial ($s$) impuesta por esta restricción matemática domina rápidamente el tiempo de ejecución. Por su parte, el Método 1 (FFT) presentó una degradación de eficiencia moderada debido al sobrecosto de comunicación y sincronización requerida durante las etapas de transposición de memoria en el algoritmo de Fourier.
 \end{itemize}
 
-\begin{figure}[htbp]
+\begin{figure}[htpb]
     \centering
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
@@ -214,23 +233,53 @@ El comportamiento de escalabilidad de los cuatro métodos refleja de manera dire
     \label{fig:openmp_metrics}
 \end{figure}
 
+\section{Validación Física del Modelo}
+\label{sec:validacion_fisica}
+
+La viabilidad de un método numérico en física computacional no se limita a su rendimiento algorítmico o al aprovechamiento de la CPU; es imprescindible garantizar que la aceleración computacional no degrade la integridad matemática y física de la dinámica simulada. Para evaluar esto, se extrajo la densidad de probabilidad $|\psi(x,t)|^2$ de la simulación iterativa representativa ($N=2048$, $\Delta t=0.01$, optimización \texttt{-O3}) para los cuatro esquemas implementados.
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.85\textwidth]{../../img/fisica_conservacion_norma.png}
+    \caption{Conservación de la probabilidad (norma unitaria) a lo largo del tiempo de simulación para cada método.}
+    \label{fig:fisica_norma}
+\end{figure}
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.9\textwidth]{../../img/fisica_densidad_final.png}
+    \caption{Densidad de probabilidad final del paquete de ondas gaussiano tras la evolución temporal.}
+    \label{fig:fisica_densidad}
+\end{figure}
+
+Como se observa en la Figura \ref{fig:fisica_norma}, la rigurosidad matemática dicta que la integral espacial de la densidad debe conservarse unitaria ($\int |\psi|^2 dx = 1$). Si bien todos los métodos se postulan analíticamente como unitarios, en la práctica computacional se revelan discrepancias físicas significativas debido a las decisiones de discretización (Figura \ref{fig:fisica_densidad}):
+
+\begin{itemize}
+    \item \textbf{Pseudo-espectral (FFT):} Aunque la norma fluctúa levemente por errores de truncamiento espacial, la dinámica física presenta severas distorsiones. Al ensancharse el paquete de ondas, la suposición matemática implícita de condiciones de contorno periódicas inherente a la FFT produce una auto-interferencia destructiva masiva (\textit{aliasing espacial}), destruyendo por completo la forma del paquete.
+    
+    \item \textbf{Aproximación de Cayley:} Si bien el paquete principal logra trasladarse y reflejarse, exhibe marcadas oscilaciones espurias internas. Este comportamiento es un síntoma clásico de \textit{dispersión numérica}. Al emplear un esquema de diferencias finitas centrado (análogo a Crank-Nicolson), las distintas componentes de frecuencia de la onda cuántica viajan a velocidades de fase computacionales erróneas, desgarrando la distribución de probabilidad a lo largo del tiempo.
+    
+    \item \textbf{Expansión de Chebyshev:} Muestra un paquete perfectamente suave y una unitariedad impecable constante. Cabe notar que los datos registrados para este método corresponden a una etapa temprana de la evolución ($t=1.0$), donde la dinámica es correcta y estable.
+    
+    \item \textbf{Subespacios de Krylov-Lanczos:} Demuestra ser el enfoque más robusto integralmente. No solo conserva una unitariedad algorítmicamente exacta durante toda la simulación, sino que su estado final ($t=10.0$) preserva una campana gaussiana impecablemente definida, representando la dispersión natural y el esparcimiento del paquete cuántico real sin artefactos espurios ni ruidos de frontera.
+\end{itemize}
+
+
 \section{Análisis Comparativo Integral y Conclusiones}
 \label{sec:conclusiones}
 
 La resolución numérica de la ecuación de Schrödinger dependiente del tiempo exige un delicado balance entre la fidelidad física del modelo y la viabilidad computacional. Tras el proceso de rediseño, optimización y paralelización, se presenta el siguiente análisis comparativo integral:
 
 \begin{enumerate}
-    \item \textbf{El Cuello de Botella Algorítmico vs. Arquitectónico:} Se demostró que la eficiencia computacional no es un mero problema de codificación, sino una consecuencia de las decisiones matemáticas fundamentales. Métodos como el de Cayley, aunque incondicionalmente estables y unitarios en teoría, introducen dependencias de datos en la solución de sistemas tridiagonales que limitan severamente su paralelización. Su fracción serial es tan alta que la Ley de Amdahl lo descarta como una opción viable para simulaciones a gran escala en HPC.
+    \item \textbf{El Cuello de Botella Algorítmico vs. Arquitectónico:} Se demostró que la eficiencia computacional no es un mero problema de codificación, sino una consecuencia de las decisiones matemáticas fundamentales. Métodos como el de Cayley, aunque incondicionalmente estables teóricamente, introducen dependencias de datos implícitas que limitan severamente su paralelización. Su fracción serial es tan alta que la Ley de Amdahl lo descarta como una opción viable para simulaciones a gran escala en HPC.
     
-    \item \textbf{La Ilusión del Tiling y la Jerarquía de Memoria:} El análisis de caché reveló que estrategias agresivas como el \textit{blocking} no son soluciones universales. Mientras que fueron indispensables para organizar los accesos a memoria erráticos de la Transformada Rápida de Fourier (Método 1), resultaron redundantes o perjudiciales en métodos de diferencias finitas puramente locales (Chebyshev y Lanczos) debido al tamaño del problema ($N=2048$), el cual residía cómodamente en la caché L1D del procesador AMD Ryzen Threadripper utilizado.
+    \item \textbf{La Ilusión del Tiling y la Jerarquía de Memoria:} El análisis de caché reveló que estrategias agresivas como el \textit{blocking} no son soluciones universales. Mientras que fueron indispensables para organizar los accesos a memoria erráticos de la Transformada Rápida de Fourier (Método 1), resultaron redundantes o perjudiciales en métodos de diferencias finitas puramente locales (Chebyshev y Lanczos) debido a que la malla utilizada ($N=2048$) residía cómodamente en la caché L1D del procesador AMD Ryzen Threadripper empleado.
     
-    \item \textbf{El Veredicto Final: Chebyshev y Subespacios de Krylov:} Para la evolución temporal de paquetes de ondas, los métodos de expansión polinomial (Chebyshev) y los basados en subespacios de Krylov (Lanczos) emergen como las opciones superiores. Ambos combinan:
-    \begin{itemize}
-        \item \textbf{Estabilidad Física:} Preservan la norma de la función de onda de manera robusta.
-        \item \textbf{Localidad Óptima:} Sus operaciones densas (matriz-vector y diferencias finitas) aprovechan de manera natural la memoria contigua de Fortran.
-        \item \textbf{Escalabilidad HPC:} Al carecer de dependencias implícitas, permiten una vectorización agresiva por parte del compilador (\texttt{-O3}) y exhiben un escalamiento paralelo que roza (o incluso supera) lo ideal mediante OpenMP.
-    \end{itemize}
+    \item \textbf{El Veredicto Final: El Rendimiento no debe sacrificar la Física.} De las cuatro aproximaciones estudiadas, el método basado en \textbf{subespacios de Krylov (Lanczos)} se erige como la solución definitiva. Desde el frente numérico, aprovecha la memoria contigua de Fortran permitiendo una vectorización extrema (\texttt{-O3}) y exhibe un excepcional escalamiento paralelo superlineal vía OpenMP. Desde el frente físico, como se demostró en la validación, fue el único capaz de sostener una evolución temporal a largo plazo manteniendo la estricta unitariedad sin introducir dispersiones numéricas ni fenómenos de aliasing.
 \end{enumerate}
 
-En conclusión, la transformación de un código científico base en una herramienta de alto desempeño requiere un entendimiento simbiótico entre las matemáticas del método numérico y la arquitectura del hardware subyacente. Los resultados obtenidos evidencian que el Método de Lanczos (Krylov), gracias a su excepcional localidad de datos y su comportamiento superlineal bajo paralelización, representa la solución más eficiente y escalable para el problema físico abordado.
+En conclusión, la transformación de un código científico base en una herramienta de alto desempeño requiere un entendimiento simbiótico entre las matemáticas del método numérico, la arquitectura del hardware subyacente y la fenomenología que se busca describir. Los resultados obtenidos validan contundentemente que no basta con escribir código rápido; la verdadera computación de alto desempeño aplicada a la física exige métodos algebraicos que respeten incondicionalmente la dinámica del sistema modelado.
+
+
+
 \end{document}

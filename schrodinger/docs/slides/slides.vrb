@@ -1,0 +1,25 @@
+\frametitle{Paralelización con OpenMP y Prevención de Carreras}
+\begin{columns}[c]
+    \column{0.55\textwidth}
+\begin{lstlisting}[language={[90]Fortran},caption={Cálculo de norma - Método Krylov-Lanczos}]
+dot_prod_real = 0.0_dp
+dot_prod_imag = 0.0_dp
+
+!$omp parallel do reduction(+:dot_prod_real, dot_prod_imag) &
+!$omp private(i, dot_prod_local) shared(psi, npts) default(none)
+do i = 1, npts-1
+  dot_prod_local = conjg(psi(i)) * psi(i)
+  dot_prod_real = dot_prod_real + real(dot_prod_local, dp)
+  dot_prod_imag = dot_prod_imag + aimag(dot_prod_local)
+end do
+
+norm_psi = sqrt(dot_prod_real * dx)
+\end{lstlisting}
+    \column{0.43\textwidth}
+      \begin{block}{Rigurosidad en el Alcance}
+        Se utilizó explícitamente \texttt{default(none)} para obligar a clasificar cada variable, mitigando accesos concurrentes indebidos.
+      \end{block}
+      \begin{exampleblock}{Reduction}
+        Las variables \texttt{dot\_prod\_real} e \texttt{imag} se declararon en cláusula de \emph{reduction} para asegurar una suma paralela libre de \textit{race conditions}.
+      \end{exampleblock}
+  \end{columns}
