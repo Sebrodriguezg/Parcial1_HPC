@@ -4,124 +4,86 @@
 #include <time.h>
 #include <lapacke.h>
 
-/* ================================
-   🔧 MEMORIA ALINEADA
-================================ */
-double* aligned_alloc_double(size_t n) {
-    double *ptr;
-    if (posix_memalign((void**)&ptr, 64, n * sizeof(double)) != 0) {
-        fprintf(stderr, "Error de memoria\n");
-        exit(1);
-    }
-    return ptr;
-}
-
-/* ================================
-   🔧 POTENCIAL INLINE
-================================ */
-static inline double morse_potential(double x, double D, double alpha) {
-    double exp_term = exp(-alpha * x);
-    double diff = 1.0 - exp_term;
-    return D * diff * diff;
-}
+/**
+ * COMPILACIÓN:
+ * gcc -O3 -march=native -ffast-math optimized_fdm.c -o optimized_fdm -llapacke -llapack -lblas -lm
+ * * EJECUCIÓN SERIAL PURA:
+ * Para evitar que la librería LAPACK/BLAS use hilos internamente:
+ * export OPENBLAS_NUM_THREADS=1
+ * export MKL_NUM_THREADS=1
+ */
 
 int main(int argc, char *argv[]) {
-
     if (argc < 2) {
         printf("Uso: %s <N>\n", argv[0]);
         return 1;
     }
 
-    int n = atoi(argv[1]);
+    const int n = atoi(argv[1]);
+    const size_t n2 = (size_t)n * n;
 
-    /* Parámetros físicos */
-    double D_POT = 10.0;
-    double ALPHA = 0.5;
-    double XMIN  = -2.0;
-    double XMAX  = 15.0;
+    /* Parámetros del Potencial de Morse (Constantes físicas) */
+    const double D_POT = 10.0;
+    const double ALPHA = 0.5;
+    const double XMIN  = -2.0;
+    const double XMAX  = 15.0;
+    
+    /* Parámetros de la Malla */
+    const double dx = (XMAX - XMIN) / (double)(n + 1);
+    const double dx2_inv = 1.0 / (dx * dx);
+    const double off_diag = -0.5 * dx2_inv;
 
-    double dx = (XMAX - XMIN) / (double)(n + 1);
+    /* Asignación de memoria alineada (64-byte) para facilitar vectorización SIMD */
+    double *restrict H = (double *)aligned_alloc(64, n2 * sizeof(double));
+    double *restrict E = (double *)aligned_alloc(64, n * sizeof(double));
 
-    /* ================================
-       🔴 ANTES:
-           matriz H[n*n]
-       🟢 AHORA:
-           solo:
-           - diagonal d[n]
-           - subdiagonal e[n-1]
-    ================================= */
-    double *d = aligned_alloc_double(n);       // diagonal (eigenvalues output)
-    double *e = aligned_alloc_double(n - 1);   // subdiagonal
+    if (!H || !E) {
+        fprintf(stderr, "Error: Fallo en la asignación de memoria.\n");
+        return 1;
+    }
 
-    double inv_dx2 = 1.0 / (dx * dx);
-    double off_diag = -0.5 * inv_dx2;
+    /* Inicialización de la matriz (Page-fill optimizado) */
+    for (size_t i = 0; i < n2; i++) H[i] = 0.0;
 
     struct timespec start, end;
     clock_gettime(CLOCK_MONOTONIC, &start);
 
-    /* ================================
-       🔥 CONSTRUCCIÓN TRIDIAGONAL
-    ================================= */
+    /* 2. CONSTRUCCIÓN OPTIMIZADA DEL HAMILTONIANO */
+    /* Se minimizan las operaciones dentro del bucle y se evita pow() */
     for (int i = 0; i < n; i++) {
-
-        double x_i = XMIN + (double)(i + 1) * dx;
-
-        /* 🔴 ANTES:
-             pow(...)
-           🟢 AHORA:
-             inline + multiplicación
-        */
-        double v_i = morse_potential(x_i, D_POT, ALPHA);
-
-        /* diagonal */
-        d[i] = inv_dx2 + v_i;
-
-        /* subdiagonal */
+        const double x_i = XMIN + (double)(i + 1) * dx;
+        const double exp_term = exp(-ALPHA * x_i);
+        const double bracket = 1.0 - exp_term;
+        const double v_i = D_POT * (bracket * bracket);
+        
+        /* Término Diagonal: T + V */
+        H[i * n + i] = dx2_inv + v_i;
+        
+        /* Términos fuera de la diagonal (Tridiagonalidad) */
         if (i < n - 1) {
-            e[i] = off_diag;
+            H[i * n + (i + 1)] = off_diag;
+            H[(i + 1) * n + i] = off_diag;
         }
     }
 
-    /* ================================
-       🔥 DIAGONALIZACIÓN TRIDIAGONAL
-
-       🔴 ANTES:
-           dsyev → O(N^3)
-       🟢 AHORA:
-           dstev → O(N^2)
-
-       ⚠️ IMPORTANTE:
-           Aunque jobz='N', LAPACKE requiere z y ldz
-    ================================= */
-    int info = LAPACKE_dstev(
-        LAPACK_ROW_MAJOR,
-        'N',      // No eigenvectors
-        n,
-        d,
-        e,
-        NULL,     // No eigenvectors → NULL
-        n         // ldz (no se usa pero requerido)
-    );
+    /* 3. DIAGONALIZACIÓN (Densa O(N^3) por requerimiento de Benchmark) */
+    /* Se utiliza el triángulo superior 'U' como referencia */
+    int info = LAPACKE_dsyev(LAPACK_ROW_MAJOR, 'V', 'U', n, H, n, E);
 
     clock_gettime(CLOCK_MONOTONIC, &end);
-
-    double time_used = (end.tv_sec - start.tv_sec)
-                     + (end.tv_nsec - start.tv_nsec) / 1e9;
+    double time_used = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
 
     if (info > 0) {
-        fprintf(stderr, "Error: dstev no convergió\n");
+        fprintf(stderr, "Error: LAPACK no pudo converger.\n");
+        free(H); free(E);
         return 1;
     }
 
-    /* ================================
-       🔴 IMPORTANTE:
-           d contiene eigenvalues
-    ================================= */
-    printf("%8d %20.12f %20.12f %20.12f %20.12f %20.12f\n",
-            n, d[0], d[1], d[2], d[3], time_used);
+    /* 4. SALIDA ESTANDARIZADA */
+    printf("%8d %20.12f %20.12f %20.12f %20.12f %20.12f\n", 
+            n, E[0], E[1], E[2], E[3], time_used);
 
-    free(d);
-    free(e);
-
+    free(H);
+    free(E);
     return 0;
 }

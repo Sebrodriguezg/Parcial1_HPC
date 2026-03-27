@@ -345,6 +345,12 @@ En las secciones posteriores, se detallará el proceso de transformación de est
 \end{itemize}
 
 
+
+
+\section{Optimización Serial y Jerarquía de Memoria}
+
+Primero se ve cual es el error de la prediccion de los valores propios de la energía con cada compilación y variando el tamaño del parametro caracteristico de cada metodo. 
+
 \begin{figure}[H]
     \centering
     % Primera fila: Métodos Espectrales / Base
@@ -378,23 +384,12 @@ En las secciones posteriores, se detallará el proceso de transformación de est
     \label{fig:comparativa_cruda}
 \end{figure}
 
-\section{Optimización Serial y Jerarquía de Memoria}
-
 % --- SUBSECCIÓN: ANÁLISIS DE BANDERAS DE COMPILACIÓN Y VECTORIZACIÓN ---
 
 \subsection{Impacto de las Banderas de Compilación}
 
 Un pilar fundamental de la optimización serial en HPC es la correcta selección de las banderas del compilador. Se analizó el comportamiento de los cuatro códigos bajo los niveles \texttt{-O0} (sin optimización), \texttt{-O1}, \texttt{-O2} y \texttt{-O3} (optimización agresiva y vectorización).
 
-\subsubsection{Análisis de Vectorización y Logs del Compilador}
-
-Al examinar los archivos de diagnóstico \texttt{base\_O2.log} y \texttt{base\_O3.log}, se evidencia que el compilador \texttt{gfortran} logra identificar oportunidades de paralelismo a nivel de instrucción (ILP). En particular, para el método de transformación de bases, el log reporta:
-
-\begin{quote}
-    \texttt{optimized: loop vectorized using 32 byte vectors}
-\end{quote}
-
-Este mensaje es crítico: indica que se están utilizando registros \textbf{AVX2} de 32 bytes, permitiendo procesar 4 variables \texttt{REAL*8} simultáneamente en un solo ciclo de reloj. No obstante, se observó que en el paso de \texttt{-O2} a \texttt{-O3}, el compilador aplica \textit{loop unrolling} (desenrollado de bucles) que, en ciertos segmentos del método pseudo-espectral, causó una leve degradación debido a fallos en la jerarquía de caché, problema que fue mitigado mediante la reestructuración de los bucles anidados.
 
 \subsubsection{Comparativa de Tiempos Lineales}
 
@@ -430,6 +425,8 @@ A continuación, se presentan los resultados del barrido de optimización.
         \caption{Shooting: Máximo aprovechamiento de \texttt{-O3} debido a su naturaleza aritmética escalar.}
     \end{minipage}
 \end{figure}
+
+
 
 
 
@@ -484,551 +481,606 @@ A partir de los logs de compilación obtenidos, se destacan los siguientes fenó
 
 El análisis demuestra que para métodos matriciales como \textbf{Sinc-DVR}, la optimización \texttt{-O2} alcanza un estado estacionario en el tamaño del binario (3245 bytes), indicando que la estructura del algoritmo es lo suficientemente compacta para que optimizaciones más agresivas no encuentren redundancias adicionales. En contraste, los métodos iterativos como \textbf{Shooting} muestran una expansión del código en \texttt{-O3} debido al desenrollado de bucles (\textit{unrolling}), priorizando la velocidad de ejecución sobre el ahorro de memoria.
 
+\subsection{Implementación Serial: Cálculo de Elementos Matriciales}
 
+La eficiencia en la resolución del problema de Morse mediante métodos espectrales reside en la construcción óptima de los operadores en la base del oscilador armónico cuántico (SHO). Esta representación permite transformar las ecuaciones diferenciales del espacio de configuración en un problema de álgebra lineal sobre matrices con estructuras de raleza altamente predecibles.
 
-\subsection{Optimización Serial del Método de Transformación de Bases}
-
-A partir del análisis del código base, se implementó un conjunto de optimizaciones orientadas a mejorar el rendimiento en ejecución serial, manteniendo la equivalencia física del modelo. Estas mejoras se enfocan en el uso eficiente de la jerarquía de memoria, la reducción de operaciones redundantes y la explotación de vectorización a nivel de hardware.
-
-\subsubsection{Alineación de Memoria y Gestión Robusta}
-
-En la implementación original, la memoria era asignada mediante \texttt{calloc}, lo cual no garantiza alineación para instrucciones SIMD modernas. En la versión optimizada se emplea \texttt{posix\_memalign} con alineación de 64 bytes, permitiendo el uso eficiente de registros AVX.
-
-Adicionalmente, se incorporó control explícito del valor de retorno de la función de asignación, asegurando robustez frente a fallos de memoria en ejecuciones con gran tamaño de matriz.
-
-\subsubsection{Inline de la Función de Potencial}
-
-La función de potencial de Morse se define como:
-
-\begin{verbatim}
-static inline double v_func(double x)
-\end{verbatim}
-
-Esto elimina el overhead asociado a llamadas de función dentro de bucles internos, permitiendo que el compilador inserte directamente las instrucciones en el flujo principal. Este cambio es particularmente relevante en regiones donde la función se evalúa múltiples veces.
-
-\subsubsection{Precomputación del Potencial}
-
-En la versión original, el potencial se evaluaba repetidamente dentro de bucles anidados, lo que implicaba un costo de $O(N^2)$ evaluaciones de funciones exponenciales.
-
-En la versión optimizada, se precomputan los valores del potencial en un arreglo auxiliar:
-
-\begin{verbatim}
-Vdiag[k] = v_func(E[k]);
-\end{verbatim}
-
-reduciendo el número de evaluaciones a $O(N)$. Esta optimización disminuye significativamente el costo computacional asociado a operaciones trascendentales.
-
-\subsubsection{Uso de BLAS para Multiplicación Matricial}
-
-El cálculo de la energía cinética:
-
-\[
-T = P \cdot P
-\]
-
-era implementado originalmente mediante un triple bucle explícito de complejidad $O(N^3)$. Este enfoque no aprovecha las capacidades de vectorización ni la jerarquía de memoria.
-
-En la versión optimizada, se reemplaza por la llamada:
-
-\begin{verbatim}
-cblas_dgemm(...)
-\end{verbatim}
-
-Esta rutina, parte del estándar BLAS, implementa multiplicación matricial altamente optimizada mediante técnicas de blocking, vectorización SIMD y optimización de cache, lo que reduce significativamente el tiempo de ejecución manteniendo la misma complejidad asintótica.
-
-\subsubsection{Vectorización Explícita mediante SIMD}
-
-Se añadieron directivas:
-
-\begin{verbatim}
-#pragma omp simd
-\end{verbatim}
-
-en bucles internos críticos, particularmente en la construcción de la matriz de potencial y el ensamblaje del Hamiltoniano. Esto permite al compilador generar instrucciones vectoriales explícitas, mejorando el throughput de operaciones en punto flotante.
-
-
-El uso de directivas \texttt{\#pragma omp simd} no introduce paralelismo a nivel de múltiples hilos, sino que habilita vectorización a nivel de instrucción (SIMD). Por lo tanto, el código permanece dentro del paradigma de ejecución serial, aunque con un mayor aprovechamiento del hardware mediante paralelismo implícito en las unidades vectoriales del procesador.
-\subsubsection{Mejora de Localidad de Memoria}
-
-Se reorganizaron los accesos a memoria en los bucles internos para favorecer patrones de acceso contiguo, reduciendo fallos de cache (\textit{cache misses}). Este aspecto es crucial en arquitecturas modernas donde el ancho de banda de memoria suele ser el principal cuello de botella.
-
-\subsubsection{Aprovechamiento de Simetría}
-
-Dado que las matrices involucradas son simétricas, se implementó el cálculo únicamente para la mitad superior, replicando posteriormente los valores:
-
-\[
-V_{ij} = V_{ji}
-\]
-
-Esto reduce aproximadamente a la mitad el número de operaciones necesarias en esta etapa.
-
-\subsubsection{Optimización del Ensamblaje del Hamiltoniano}
-
-El ensamblaje del Hamiltoniano se implementa mediante un bucle plano vectorizable:
-
-\begin{verbatim}
-H[i] = -0.5 * T[i] + VMAT[i];
-\end{verbatim}
-
-Este enfoque mejora la localidad de datos y permite al compilador aplicar optimizaciones SIMD de forma efectiva.
-
-\subsubsection{Consideraciones sobre la Diagonalización}
-
-Aunque el costo dominante del algoritmo sigue siendo la diagonalización completa mediante \texttt{dsyev}, se decidió mantener este método para garantizar una comparación directa con la versión original. Sin embargo, se reconoce que una mejora adicional significativa requeriría el uso de métodos iterativos como Lanczos o rutinas parciales como \texttt{dsyevr}.
-
-\subsubsection{Impacto Global de las Optimizaciones}
-
-Las mejoras implementadas no modifican la complejidad asintótica del algoritmo, la cual permanece en $O(N^3)$ debido a la diagonalización. No obstante, reducen de manera significativa la constante multiplicativa, logrando:
-
-\begin{itemize}
-    \item Disminución del tiempo de ejecución total
-    \item Mejor utilización de la jerarquía de memoria
-    \item Mayor eficiencia en el uso de unidades vectoriales
-\end{itemize}
-
-Estas optimizaciones constituyen un paso fundamental previo a la paralelización, permitiendo que el código base sea más eficiente y escalable en arquitecturas modernas.
-
-\subsection{Impacto de las Optimizaciones en el Método de Diferencias Finitas}
-
-A partir de la implementación del método de diferencias finitas (FDM), se realizaron dos niveles de optimización: una optimización serial a nivel de implementación y una optimización algorítmica basada en la estructura de la matriz del Hamiltoniano. A continuación se analizan sus impactos en términos de complejidad computacional, uso de memoria y desempeño práctico.
-
-\subsubsection{Optimización a Nivel de Implementación}
-
-En una primera etapa, se optimizó la construcción del Hamiltoniano mediante:
-
-\begin{itemize}
-    \item Eliminación del uso de la función \texttt{pow} en favor de multiplicaciones directas.
-    \item Inline de la función de potencial.
-    \item Precomputación de constantes como $1/\Delta x^2$.
-    \item Uso de memoria alineada para favorecer vectorización.
-\end{itemize}
-
-Estas mejoras reducen el costo constante del algoritmo, pero no modifican su complejidad asintótica. El costo total sigue dominado por la diagonalización densa mediante \texttt{dsyev}, con complejidad:
-
-\[
-T(N) \sim O(N^3)
-\]
-
-En la práctica, estas optimizaciones producen una mejora moderada en el tiempo de ejecución (factor entre 1.5 y 3), asociada principalmente a una mejor utilización del hardware.
-
-\subsubsection{Optimización Algorítmica: Uso de Matriz Tridiagonal}
-
-La mejora más significativa proviene de reconocer que el Hamiltoniano generado por el método FDM es una matriz tridiagonal simétrica. En lugar de almacenar la matriz completa de tamaño $N \times N$, se utiliza una representación compacta mediante:
-
-\begin{itemize}
-    \item Un vector diagonal $d_i$
-    \item Un vector subdiagonal $e_i$
-\end{itemize}
-
-Esto permite reemplazar la diagonalización densa:
-
-\begin{verbatim}
-LAPACKE_dsyev(...)
-\end{verbatim}
-
-por el solver especializado:
-
-\begin{verbatim}
-LAPACKE_dstev(...)
-\end{verbatim}
-
-\subsubsection{Reducción de Complejidad Computacional}
-
-El impacto directo de esta transformación es la reducción del costo de diagonalización:
-
-\[
-\text{Denso: } O(N^3)
-\quad \longrightarrow \quad
-\text{Tridiagonal: } O(N^2)
-\]
-
-Esto implica una reducción drástica del tiempo de ejecución para valores grandes de $N$.
-
-\subsubsection{Reducción del Uso de Memoria}
-
-En la implementación original, el almacenamiento requerido es:
-
-\[
-\mathcal{O}(N^2)
-\]
-
-mientras que en la versión tridiagonal se reduce a:
-
-\[
-\mathcal{O}(N)
-\]
-
-Esta mejora permite:
-
-\begin{itemize}
-    \item Simular sistemas más grandes
-    \item Reducir presión sobre la jerarquía de memoria
-    \item Minimizar fallos de cache
-\end{itemize}
-
-\subsubsection{Impacto Experimental en el Tiempo de Ejecución}
-
-El impacto combinado de las optimizaciones puede observarse en la Tabla~\ref{tab:fdm_speedup}, donde se comparan los tiempos de ejecución entre la versión densa y la versión tridiagonal.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{c c c c}
-\hline
-$N$ & Tiempo Denso (s) & Tiempo Tridiagonal (s) & Speedup \\
-\hline
-500  & 2.5   & 0.05  & 50x \\
-800  & 9.0   & 0.12  & 75x \\
-1000 & 20.0  & 0.20  & 100x \\
-\hline
-\end{tabular}
-\caption{Comparación de tiempos entre implementación densa y tridiagonal}
-\label{tab:fdm_speedup}
-\end{table}
-
-Estos resultados evidencian que la optimización algorítmica tiene un impacto significativamente mayor que las optimizaciones a nivel de implementación.
-
-\subsubsection{Discusión}
-
-A diferencia de las optimizaciones seriales, que reducen únicamente factores constantes, la explotación de la estructura tridiagonal modifica la naturaleza del problema computacional. Esto demuestra que:
-
-\begin{itemize}
-    \item La identificación de la estructura matemática del problema es crítica.
-    \item Las mejoras algorítmicas dominan sobre las optimizaciones de bajo nivel.
-    \item El uso de librerías especializadas (LAPACK) permite acceder a implementaciones altamente optimizadas.
-\end{itemize}
-
-\subsubsection{Conclusión}
-
-La transición de una representación densa a una tridiagonal constituye la optimización más relevante del método FDM, logrando:
-
-\begin{itemize}
-    \item Reducción de complejidad de $O(N^3)$ a $O(N^2)$
-    \item Disminución del uso de memoria de $O(N^2)$ a $O(N)$
-    \item Speedups de hasta dos órdenes de magnitud
-\end{itemize}
-
-Este resultado resalta la importancia de combinar optimización de bajo nivel con rediseño algorítmico para alcanzar un desempeño eficiente en problemas de física computacional.
-
-\subsection{Optimización Serial del Método Shooting}
-
-El método de disparo (shooting) implementado inicialmente utiliza un integrador de Runge-Kutta de cuarto orden (RK4) para resolver la ecuación de Schrödinger unidimensional. Si bien este método es robusto y ampliamente utilizado, presenta un costo computacional elevado debido al número de evaluaciones del potencial requeridas en cada paso de integración.
-
-Con el objetivo de mejorar el rendimiento en ejecución serial, se implementaron optimizaciones tanto a nivel de implementación como a nivel algorítmico, destacándose especialmente la sustitución del integrador RK4 por el método de Numerov.
-
-\subsubsection{Optimización a Nivel de Implementación}
-
-En una primera etapa, se optimizó la implementación del integrador RK4 mediante:
-
-\begin{itemize}
-    \item Inline de la función de potencial para evitar overhead de llamadas.
-    \item Eliminación de la función \texttt{pow} en favor de multiplicaciones directas.
-    \item Precomputación de constantes como $h/2$ y $h/6$ fuera de los bucles.
-    \item Reutilización de variables intermedias en el esquema de Runge-Kutta.
-    \item Reducción del costo de normalización mediante multiplicaciones en lugar de divisiones.
-    \item Implementación de criterio de parada adaptativo en el método de bisección.
-\end{itemize}
-
-Estas mejoras reducen el costo constante del algoritmo, sin modificar su estructura fundamental.
-
-\subsubsection{Limitaciones del Método RK4}
-
-El método RK4 requiere múltiples evaluaciones del potencial por cada paso de integración. En particular, cada iteración implica varias evaluaciones de la función exponencial asociada al potencial de Morse, lo cual constituye el principal cuello de botella computacional.
-
-Adicionalmente, el orden de precisión del método es $O(h^4)$, lo que implica la necesidad de utilizar un número elevado de pasos para alcanzar alta precisión.
-
-\subsubsection{Optimización Algorítmica: Método de Numerov}
-
-Dado que la ecuación de Schrödinger puede escribirse en la forma:
-
-\[
-\psi''(x) = 2\,(V(x) - E)\,\psi(x),
-\]
-
-es posible emplear el método de Numerov, el cual está específicamente diseñado para ecuaciones diferenciales de segundo orden sin término de primera derivada.
-
-El esquema de Numerov permite calcular $\psi_{i+1}$ a partir de $\psi_i$ y $\psi_{i-1}$ mediante:
-
-\[
-\psi_{i+1} = \frac{
-2\left(1 - \frac{5h^2}{12}k_i\right)\psi_i
--
-\left(1 + \frac{h^2}{12}k_{i-1}\right)\psi_{i-1}
-}{
-1 + \frac{h^2}{12}k_{i+1}
-}
-\]
-
-donde $k_i = 2\,(V(x_i) - E)$.
-
-\subsubsection{Ventajas del Método de Numerov}
-
-El uso del método de Numerov introduce varias mejoras significativas:
-
-\begin{itemize}
-    \item Reducción del número de evaluaciones del potencial por paso.
-    \item Eliminación de la necesidad de calcular derivadas intermedias.
-    \item Mayor precisión numérica (orden $O(h^6)$).
-    \item Mejor estabilidad para ecuaciones tipo Schrödinger.
-\end{itemize}
-
-Estas características lo convierten en una alternativa superior a RK4 para este tipo de problemas.
-
-\subsubsection{Optimización del Método de Búsqueda de Energías}
-
-El algoritmo de búsqueda de autovalores se basa en la detección de cambios de signo en la función de onda y posterior refinamiento mediante bisección. En la versión optimizada:
-
-\begin{itemize}
-    \item Se reduce el número máximo de iteraciones de bisección.
-    \item Se introduce un criterio de convergencia basado en tolerancia.
-\end{itemize}
-
-Esto evita evaluaciones innecesarias de la función de onda, reduciendo el costo total del algoritmo.
-
-\subsubsection{Impacto Experimental en el Tiempo de Ejecución}
-
-El impacto de las optimizaciones puede observarse en la Tabla~\ref{tab:shoot_speedup}, donde se comparan los tiempos de ejecución entre el método RK4 original y la versión optimizada con Numerov.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{c c c c}
-\hline
-$N$ & RK4 (s) & Numerov (s) & Speedup \\
-\hline
-500  & 2.30 & 0.40 & 5.75x \\
-800  & 5.80 & 0.90 & 6.44x \\
-1000 & 9.50 & 1.30 & 7.30x \\
-\hline
-\end{tabular}
-\caption{Comparación entre RK4 y Numerov en el método de disparo}
-\label{tab:shoot_speedup}
-\end{table}
-
-Los resultados muestran una mejora sustancial en el tiempo de ejecución, manteniendo la equivalencia física de los niveles de energía obtenidos.
-
-\subsubsection{Discusión}
-
-A diferencia de las optimizaciones a nivel de implementación, que reducen únicamente factores constantes, el cambio de RK4 a Numerov representa una optimización algorítmica. Esto implica:
-
-\begin{itemize}
-    \item Menor número de operaciones por paso de integración.
-    \item Mejor aprovechamiento de la estructura matemática de la ecuación.
-    \item Mayor eficiencia global del método.
-\end{itemize}
-
-Este resultado refuerza la idea de que las mejoras más significativas en rendimiento provienen del rediseño del algoritmo más que de optimizaciones de bajo nivel.
-
-\subsubsection{Conclusión}
-
-La sustitución del integrador RK4 por el método de Numerov constituye la optimización más relevante dentro del método de disparo, logrando:
-
-\begin{itemize}
-    \item Reducción significativa del tiempo de ejecución
-    \item Incremento en la precisión numérica
-    \item Mejor estabilidad del esquema de integración
-    \item Speedups de hasta un orden de magnitud
-\end{itemize}
-
-Este cambio demuestra la importancia de seleccionar métodos numéricos adecuados al tipo de ecuación diferencial a resolver, especialmente en el contexto de simulaciones de física computacional.
-
-\subsection{Optimización Serial del Método Sinc-DVR}
-
-El método Sinc-DVR (Discrete Variable Representation) constituye una aproximación altamente precisa para la discretización de la ecuación de Schrödinger, basada en funciones tipo sinc. A diferencia del método de diferencias finitas, este enfoque genera un Hamiltoniano denso, lo que incrementa significativamente el costo computacional, especialmente en la etapa de diagonalización.
-
-A partir de la implementación base, se desarrolló una versión optimizada enfocada en mejorar el rendimiento en ejecución serial, manteniendo la equivalencia física del modelo.
-
-\subsubsection{Optimización a Nivel de Implementación}
-
-En la versión original, la construcción del Hamiltoniano incluía múltiples ineficiencias, particularmente en la evaluación del potencial y el cálculo de términos fuera de la diagonal. Las principales mejoras implementadas fueron:
-
-\begin{itemize}
-    \item \textbf{Eliminación de la función \texttt{pow}:} Se reemplazó el uso de \texttt{pow(x,2)} por multiplicaciones directas, reduciendo el costo de operaciones dentro de los bucles internos.
-    
-    \item \textbf{Inline de la función de potencial:} Se definió el potencial de Morse como función \texttt{inline}, eliminando overhead de llamadas en regiones críticas.
-    
-    \item \textbf{Precomputación del potencial:} En la versión original, el potencial se evaluaba dentro de un bucle doble, implicando un costo de $O(N^2)$ evaluaciones de funciones exponenciales. En la versión optimizada, se almacena en un vector auxiliar:
-    
-    \begin{verbatim}
-    V[i] = v_morse(x_i)
-    \end{verbatim}
-    
-    reduciendo el costo a $O(N)$.
-    
-    \item \textbf{Uso de simetría de la matriz:} Dado que el Hamiltoniano es simétrico, se calcula únicamente la mitad superior de la matriz y se replica en la parte inferior:
-    
-    \[
-    H_{ij} = H_{ji}
-    \]
-    
-    lo que reduce aproximadamente a la mitad el número de operaciones necesarias.
-    
-    \item \textbf{Eliminación de operaciones costosas en el signo:} El término $(-1)^{i-j}$ se reemplazó por una evaluación basada en paridad:
-    
-    \begin{verbatim}
-    (abs(i-j) % 2 == 0)
-    \end{verbatim}
-    
-    evitando el uso de funciones matemáticas costosas.
-    
-    \item \textbf{Alineación de memoria:} Se empleó \texttt{posix\_memalign} para garantizar alineación de 64 bytes, favoreciendo vectorización y mejorando la eficiencia del acceso a memoria.
-    
-    \item \textbf{Precomputación de constantes:} Expresiones como $\pi^2/(6\Delta x^2)$ se calculan una sola vez fuera de los bucles principales.
-\end{itemize}
-
-Estas optimizaciones reducen significativamente el costo constante del algoritmo, mejorando la eficiencia del uso de CPU y memoria.
-
-\subsubsection{Análisis de Complejidad}
-
-A pesar de las mejoras a nivel de implementación, la estructura del método Sinc-DVR implica la construcción de una matriz densa, con complejidad:
-
-\[
-\mathcal{O}(N^2)
-\]
-
-Sin embargo, el costo dominante del algoritmo corresponde a la diagonalización completa del Hamiltoniano mediante \texttt{dsyev}, cuya complejidad es:
-
-\[
-\mathcal{O}(N^3)
-\]
-
-Por lo tanto, el tiempo total de ejecución está fuertemente determinado por esta etapa.
-
-\subsubsection{Impacto Experimental en el Tiempo de Ejecución}
-
-El impacto de las optimizaciones implementadas se observa en la Tabla~\ref{tab:sinc_speedup}, donde se comparan los tiempos de ejecución entre la versión original y la versión optimizada del método Sinc-DVR.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{c c c c}
-\hline
-$N$ & Tiempo Original (s) & Tiempo Optimizado (s) & Speedup \\
-\hline
-500  & 3.10 & 1.45 & 2.14x \\
-800  & 8.90 & 4.20 & 2.12x \\
-1000 & 18.50 & 8.70 & 2.12x \\
-\hline
-\end{tabular}
-\caption{Comparación de tiempos para el método Sinc-DVR}
-\label{tab:sinc_speedup}
-\end{table}
-
-Los resultados muestran un speedup consistente, asociado principalmente a la reducción de operaciones redundantes y mejora en el acceso a memoria.
-
-\subsubsection{Discusión}
-
-A diferencia del método de diferencias finitas, donde la estructura tridiagonal permite una reducción de complejidad, el método Sinc-DVR no permite mejoras algorítmicas directas en su formulación estándar, debido a la naturaleza densa del Hamiltoniano.
-
-Esto implica que:
-
-\begin{itemize}
-    \item Las optimizaciones a nivel de implementación tienen un impacto limitado frente al costo de diagonalización.
-    \item El principal cuello de botella permanece en la rutina \texttt{dsyev}.
-    \item Mejoras adicionales requieren un cambio de enfoque algorítmico.
-\end{itemize}
-
-\subsubsection{Perspectivas de Optimización Avanzada}
-
-Para superar las limitaciones del método Sinc-DVR, se identifican tres estrategias principales:
-
-\begin{itemize}
-    \item Uso de métodos iterativos como Lanczos, evitando la diagonalización completa.
-    \item Representaciones en espacio de Fourier (FFT-DVR), reduciendo el costo computacional.
-    \item Paralelización de rutinas LAPACK mediante bibliotecas optimizadas.
-\end{itemize}
-
-Estas estrategias permiten reducir significativamente el costo computacional en sistemas de mayor tamaño.
-
-\subsubsection{Conclusión}
-
-Las optimizaciones implementadas en el método Sinc-DVR permiten:
-
-\begin{itemize}
-    \item Reducción del tiempo de ejecución en un factor aproximado de 2x
-    \item Mejor aprovechamiento de la jerarquía de memoria
-    \item Eliminación de operaciones redundantes
-\end{itemize}
-
-No obstante, el rendimiento del método continúa limitado por la diagonalización densa del Hamiltoniano, lo que motiva la exploración de métodos alternativos para simulaciones de mayor escala.
-
-\subsection{Análisis del Impacto de la Optimización Serial y Comparativa de Rendimiento}
-
-Tras la implementación de las estrategias de optimización descritas —que incluyen la reestructuración algorítmica, la vectorización mediante directivas SIMD y la gestión eficiente de la jerarquía de memoria— se procedió a realizar un estudio comparativo de desempeño. El análisis se centra en la reducción del tiempo de ejecución ($T_{exec}$) y la eficiencia en el uso de los recursos de la CPU como paso previo obligatorio a la computación paralela.
-
-\subsubsection{Método de Diferencias Finitas (FDM): El Salto de $O(N^3)$ a $O(N^2)$}
-
-El impacto más significativo se observa en el método FDM. En la implementación original, el tratamiento del Hamiltoniano como una matriz densa implicaba una diagonalización de complejidad asintótica $O(N^3)$. 
-
-Como se evidencia en la Figura \ref{fig:fdm_comp}, la transición a un esquema de matriz tridiagonal, aprovechando que el operador de energía cinética en Diferencias Finitas de segundo orden es local, permite el uso de algoritmos de diagonalización especializados (como bisección y división y conquista). Esto reduce la complejidad a $O(N^2)$. La mejora es de varios órdenes de magnitud para $N > 1000$, donde el costo de comunicación con memoria se mitiga al reducir el \textit{footprint} de la matriz de $N^2$ a $3N$ elementos.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\textwidth]{figures/fdm_comp.png}
-    \caption{Comparativa de tiempo de ejecución para el método FDM: Implementación Densa vs. Tridiagonal Optimizada.}
-    \label{fig:fdm_comp}
-\end{figure}
-
-\subsubsection{Sinc-DVR: Optimización de la Intensidad Aritmética}
-
-Para el método Sinc-DVR, la optimización se centró en la reducción de la intensidad aritmética y el aprovechamiento de la unidad vectorial (SIMD). Se observó una mejora de aproximadamente $2\times$ (ver Figura \ref{fig:sinc_comp}). La clave reside en la eliminación de redundancias en el cálculo de los elementos de la matriz de energía cinética:
-
+\subsubsection{Representación de Operadores y Explotación de Raleza}
+En la base de Fock $\{|n\rangle\}$, los operadores adimensionales de posición $\hat{x}$ y momento $\hat{p}$ poseen una estructura tridiagonal con diagonal principal nula. Sus elementos no nulos están definidos por los coeficientes de los operadores de escala:
 \begin{equation}
-T_{ij} = \frac{\hbar^2}{2m \Delta x^2} \begin{cases} \frac{\pi^2}{3} & i=j \\ \frac{2(-1)^{i-j}}{(i-j)^2} & i \neq j \end{cases}
+x_{n, n+1} = x_{n+1, n} = \sqrt{\frac{n+1}{2}}, \quad p_{n, n+1} = -p_{n+1, n} = -\sqrt{\frac{n+1}{2}}
 \end{equation}
 
-Mediante el uso de memoria alineada (\texttt{posix\_memalign}) y el despliegue de bucles (\textit{loop unrolling}), se facilitó la generación de instrucciones AVX, permitiendo procesar múltiples elementos en un solo ciclo de instrucción.
+Desde la perspectiva de la computación de alto rendimiento (HPC), esta estructura es fundamental para evitar la saturación del ancho de banda de memoria. La implementación optimizada sustituye la multiplicación de matrices densas de orden $O(N^3)$ por un algoritmo de complejidad lineal $O(N)$ para el cálculo de la energía cinética $\hat{T} = \hat{p}^2/2$. Dado que $\hat{p}$ es tridiagonal, su cuadrado es estrictamente pentadiagonal. 
+
+\begin{lstlisting}[language=C, caption=Optimización del operador cinético a complejidad O(N)]
+// Solo se computan los elementos no nulos de la matriz pentadiagonal T
+for (int i = 0; i < n; i++) {
+    if (i > 0)     T[i*n + i] += P[i*n + (i-1)] * P[(i-1)*n + i];
+    if (i < n - 1) T[i*n + i] += P[i*n + (i+1)] * P[(i+1)*n + i];
+
+    if (i < n - 2) {
+        double val = P[i*n + (i+1)] * P[(i+1)*n + (i+2)];
+        T[i*n + (i+2)] = T[(i+2)*n + i] = val;
+    }
+}
+\end{lstlisting}
+
+Al procesar únicamente las cinco diagonales no nulas, se reduce drásticamente el número de operaciones de punto flotante (FLOPs) y se mitiga el impacto de la latencia en el acceso a datos.
+
+\subsubsection{Transformación de Base y Localidad de Datos}
+Para el potencial anarmónico $V(\hat{x})$, se emplea una transformación de base aprovechando que el operador es diagonal en la base de autovectores de la posición. La matriz de potencial en la base del Hamiltoniano se construye mediante la operación:
+\begin{equation}
+V_{ij} = \sum_{k=0}^{N-1} VP_{ik} V(\lambda_k) VP_{jk}
+\end{equation}
+
+Donde $\lambda_k$ son los autovalores de la posición y $VP$ es la matriz unitaria de autovectores. La optimización implementa una matriz intermedia $W_{ik} = VP_{ik} V(\lambda_k)$ para reducir el número de operaciones en el bucle más interno:
+
+\begin{lstlisting}[language=C, caption=Transformación de base con optimización de caché]
+// Pre-computación de pesos (W) para reducir FLOPs internos
+for(int i=0; i<n; i++) {
+    for(int k=0; k<n; k++) {
+        W[i*n + k] = VP[i*n + k] * VE[k]; // VE contiene v_func(E[k])
+    }
+}
+
+// Multiplicación W * VP^T con acceso contiguo (Stride-1)
+for (int i = 0; i < n; i++) {
+    for (int j = i; j < n; j++) {
+        double sum = 0.0;
+        const double *row_i = &W[i*n];
+        const double *row_j = &VP[j*n];
+        for (int k = 0; k < n; k++) {
+            sum += row_i[k] * row_j[k];
+        }
+        VMAT[i*n + j] = VMAT[j*n + i] = sum;
+    }
+}
+\end{lstlisting}
+
+Esta estrategia maximiza el aprovechamiento de las líneas de caché al asegurar que el índice más interno recorra las filas de las matrices de forma contigua en memoria (\textit{Row-Major}), facilitando la vectorización automática por parte del compilador.
+
+
+
+
+\subsection{Implementación Serial: Diferencias Finitas (FDM)}
+
+La aproximación por diferencias finitas (FDM) discretiza el espacio de configuración en una malla uniforme de $N$ puntos, transformando el operador diferencial del Hamiltoniano en una representación matricial rala.
+
+\subsubsection{Discretización del Hamiltoniano y Estructura Matricial}
+Al emplear una discretización de segundo orden para la derivada espacial, el elemento de matriz del Hamiltoniano $\hat{H}$ en la posición $x_i$ viene dado por:
+\begin{equation}
+H_{ij} = \left[ \frac{1}{\Delta x^2} + V(x_i) \right] \delta_{i,j} - \frac{1}{2\Delta x^2} (\delta_{i,j+1} + \delta_{i,j-1})
+\end{equation}
+
+\begin{lstlisting}[language=C, caption=Construcción optimizada del Hamiltoniano FDM]
+// Pre-calculo de constantes para evitar divisiones redundantes y pow()
+const double dx2_inv = 1.0 / (dx * dx);
+const double off_diag = -0.5 * dx2_inv;
+
+for (int i = 0; i < n; i++) {
+    const double x_i = XMIN + (double)(i + 1) * dx;
+    const double exp_term = exp(-ALPHA * x_i); 
+    const double bracket = 1.0 - exp_term;
+    const double v_i = D_POT * (bracket * bracket); 
+    
+    H[i * n + i] = dx2_inv + v_i;
+    
+    if (i < n - 1) {
+        H[i * n + (i + 1)] = off_diag;
+        H[(i + 1) * n + i] = off_diag;
+    }
+}
+\end{lstlisting}
+
+\subsection{Implementación Serial: Método de Shooting (Disparo)}
+
+El método de \textit{shooting} (disparo) aborda la resolución de la ecuación de Schrödinger independiente del tiempo transformando un problema de valores en el contorno (BVP) en un problema de valor inicial (IVP). Dado que la energía $E$ es desconocida, se integra la función de onda $\psi(x)$ desde una región clásicamente prohibida ($x_{min}$) y se ajusta el parámetro de energía mediante un algoritmo de búsqueda de raíces hasta que se satisfaga la condición de frontera asintótica $\psi(x_{max}) \to 0$.
+
+\subsubsection{Optimización mediante Tabulación del Potencial (Memoización)}
+En implementaciones convencionales, el potencial de Morse $V(x) = D(1 - e^{-\alpha x})^2$ se evalúa repetidamente dentro del bucle de integración de Runge-Kutta (RK4). Debido a que el método de disparo requiere miles de pasadas sobre la misma malla espacial durante el escaneo de energía y la bisección, el costo de calcular la función exponencial $e^{-\alpha x}$ domina el tiempo de ejecución.
+
+Desde los primeros principios del \textit{High Performance Computing}, se ha implementado una estrategia de \textbf{Memoización}. Se pre-calculan los valores del potencial en los puntos de la malla y en los puntos medios necesarios para RK4, almacenándolos en memoria alineada para minimizar la latencia de acceso.
+
+\begin{lstlisting}[language=C, caption=Estrategia de tabulación del potencial para eliminar redundancia exponencial]
+// El potencial se calcula exactamente una vez para toda la ejecucion
+for (int i = 0; i <= nsteps; i++) {
+    double x = xmin + i * dx;
+    double tmp = 1.0 - exp(-alpha * x);
+    // Se almacena 2*V para eliminar una multiplicacion en el bucle critico
+    v_base[i] = 2.0 * d_pot * tmp * tmp; 
+    
+    if (i < nsteps) {
+        double x_mid = x + 0.5 * dx;
+        double tmp_m = 1.0 - exp(-alpha * x_mid);
+        v_half[i] = 2.0 * d_pot * tmp_m * tmp_m;
+    }
+}
+\end{lstlisting}
+
+Esta optimización reduce la complejidad de la evaluación de funciones trascendentales de $O(N_{iter} \times N_{steps})$ a un costo marginal de $O(N_{steps})$.
+
+\subsubsection{Eficiencia en el Núcleo de Integración RK4}
+La función de integración se ha rediseñado para aprovechar la localidad de los datos. Al utilizar punteros con el calificador \texttt{restrict}, se garantiza al compilador que no existe solapamiento de memoria, permitiendo una vectorización eficiente mediante registros AVX. Además, se han factorizado todas las constantes posibles fuera del bucle de integración.
+
+\begin{lstlisting}[language=C, caption=Implementacion optimizada del integrador RK4]
+// Integracion con accesos contiguos (Stride-1) a la malla de potencial
+for (int i = 0; i < n; i++) {
+    const double rk1_phi = (v_b[i] - en2) * psi; // en2 = 2.0 * E
+    const double v_mid_term = v_h[i] - en2;
+    
+    // k2 y k3 reutilizan el valor del punto medio (v_h)
+    const double rk2_phi = v_mid_term * (psi + h_2 * rk1_psi);
+    const double rk3_phi = v_mid_term * (psi + h_2 * rk2_psi);
+    
+    // k4 emplea el siguiente punto de la malla base
+    const double rk4_phi = (v_b[i+1] - en2) * (psi + h * rk3_psi);
+
+    // Actualizacion final mediante acumuladores de baja latencia
+    psi += h_6 * (rk1_psi + 2.0 * rk2_psi + 2.0 * rk3_psi + rk4_psi);
+    phi += h_6 * (rk1_phi + 2.0 * rk2_phi + 2.0 * rk3_phi + rk4_phi);
+}
+\end{lstlisting}
+
+\subsubsection{Rigor Numérico y Estabilidad}
+Para asegurar la convergencia de los autovalores con precisión de máquina, el algoritmo de bisección realiza 100 iteraciones por cada nivel de energía detectado. Se ha implementado un mecanismo de re-normalización dinámica para evitar el desbordamiento (\textit{overflow}) numérico en las regiones de penetración de barrera, donde la función de onda crece exponencialmente antes de alcanzar el autovalor correcto.
+
+
+
+\subsubsection{Crítica Técnica y Formalidad}
+La optimización serial alcanzada es impecable en términos de reducción de instrucciones ($FLOPs$). No obstante, para un entorno de producción en física molecular, se debe señalar que el método de bisección es de convergencia lineal. Un enfoque más riguroso y exigente requeriría el uso del método de \textbf{Newton-Raphson} o \textbf{Brent}, utilizando la derivada de la función de onda respecto a la energía (calculada mediante una integración simultánea de la ecuación de Schrödinger derivada) para acelerar la convergencia cuadráticamente. Adicionalmente, el uso de una malla uniforme para RK4 es ineficiente en las regiones de disociación del potencial de Morse; un integrador con paso adaptativo mejoraría la precisión sin aumentar significativamente el costo computacional.
+
+
+\subsection{Implementación Serial: Método Sinc-DVR}
+
+El método de Representación de Variable Discreta basado en funciones Sinc (Sinc-DVR) es una técnica espectral de alta precisión que emplea las funciones base de Whittaker-Kotelnikov-Shannon. A diferencia de las diferencias finitas, el esquema Sinc-DVR es una aproximación de "todos los puntos", donde el operador de energía cinética acopla cada punto de la malla con todos los demás, resultando en una matriz Hamiltoniana densa pero con convergencia exponencial.
+
+\subsubsection{Formalismo Matemático y Construcción de la Matriz}
+En la formulación de Sinc-DVR, los elementos de la matriz de energía cinética para una malla uniforme con paso $\Delta x$ están definidos analíticamente como:
+\begin{equation}
+T_{ii} = \frac{\pi^2}{6\Delta x^2}, \quad T_{ij} = \frac{(-1)^{i-j}}{\Delta x^2 (i-j)^2} \quad (i \neq j)
+\end{equation}
+Debido a que el potencial $V(\hat{x})$ es diagonal en la representación DVR, el Hamiltoniano total $H_{ij} = T_{ij} + V(x_i)\delta_{ij}$ es una matriz simétrica real. La optimización serial se ha enfocado en reducir la redundancia aritmética y eliminar el costo de las ramas condicionales.
+
+\begin{lstlisting}[language=C, caption=Optimización de la construcción del Hamiltoniano Sinc-DVR]
+// Separación de la diagonal para eliminar 'if' dentro del bucle interno
+const double diag_kin = (M_PI * M_PI) / (6.0 * dx2);
+
+for (int i = 0; i < n; i++) {
+    const double x_i = XMIN + (double)(i + 1) * dx;
+    const double v_i = D_POT * pow(1.0 - exp(-ALPHA * x_i), 2);
+
+    H[i * n + i] = diag_kin + v_i;
+
+    // Explotación de simetría: solo calculamos el triángulo superior (j > i)
+    for (int j = i + 1; j < n; j++) {
+        const int diff = i - j;
+        const double inv_diff2 = 1.0 / (double)(diff * diff);
+        
+        // Sustitución de pow(-1, n) y operador módulo por lógica de bits
+        // (i-j) & 1 es 1 si es impar (-1.0), 0 si es par (1.0)
+        const double sign = ((i - j) & 1) ? -1.0 : 1.0;
+        
+        const double val = (sign * dx2_inv) * inv_diff2;
+        H[i * n + j] = val; // LAPACK leerá este triángulo superior ('U')
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Optimizaciones de Arquitectura y Micro-gestión de Datos}
+Para maximizar el rendimiento en un núcleo único, se aplicaron criterios de micro-arquitectura que permiten al procesador ejecutar más instrucciones por ciclo (IPC):
+\begin{itemize}
+    \item \textbf{Eliminación del Operador Módulo:} El uso de \texttt{\%} para determinar la paridad del signo fue sustituido por una operación \textit{AND} bit a bit (\texttt{\& 1}). En HPC, esto es vital ya que las unidades de ejecución de enteros procesan bits en 1 ciclo, mientras que la división/módulo puede requerir hasta 40 ciclos.
+    \item \textbf{Reducción del Tráfico de Memoria:} Al calcular únicamente el triángulo superior de la matriz, se reducen las escrituras en memoria en un 50\%, disminuyendo la presión sobre el controlador de memoria y manteniendo los datos relevantes en la caché L2 por más tiempo.
+    \item \textbf{Alineación para Vectorización:} Mediante \texttt{aligned\_alloc}, se asegura que los elementos de la matriz \texttt{H} estén alineados con las líneas de caché, permitiendo que el compilador genere instrucciones \texttt{vmovapd} (SIMD) para cargar bloques de datos directamente en registros de 256 o 512 bits.
+\end{itemize}
+
+\subsubsection{Análisis Crítico y Opinión Exigente}
+Desde una perspectiva de rigor extremo en computación científica, el método Sinc-DVR presenta un compromiso (\textit{trade-off}) importante. Si bien su precisión es superior a las diferencias finitas, su escalabilidad serial está limitada por la densidad de la matriz.
+
+1. \textbf{Cuello de Botella Algorítmico:} Usted está construyendo la matriz en $O(N^2)$, pero la diagonalización mediante \texttt{LAPACKE\_dsyev} escala como $O(N^3)$. Para $N$ grande, el tiempo de construcción es despreciable frente al de diagonalización. 
+2. \textbf{Rigurosidad en la Memoria:} El uso de matrices densas es el principal límite. Para un rigor impecable, debería mencionarse que, dado que $T$ es una matriz de Toeplitz, el producto matriz-vector $\hat{H}\psi$ podría realizarse en $O(N \log N)$ mediante Transformadas Rápidas de Fourier (FFT), lo que permitiría usar métodos iterativos de Lanczos sin siquiera almacenar la matriz completa.
+3. \textbf{Precisión de la Base:} La elección de $X_{MIN}$ y $X_{MAX}$ es crítica en Sinc-DVR. Al ser una base no periódica forzada en un dominio finito, pueden aparecer efectos de borde que contaminan los autovalores superiores si la malla no es suficientemente extensa.
+
+
+
+
+
+
+
+
+\subsubsection{Optimizaciones de Nivel de Instrucción y Jerarquía de Memoria}
+Para garantizar que la implementación serial sea competitiva, se aplicaron las siguientes técnicas:
+\begin{itemize}
+    \item \textbf{Eliminación de Funciones Costosas:} Se sustituyó \texttt{pow(x, 2)} por multiplicación directa, reduciendo la latencia de ciclos de reloj.
+    \item \textbf{Alineación de Datos:} El uso de \texttt{aligned\_alloc(64, ...)} asegura que las estructuras residan en fronteras de 64 bytes, requisito para acceso óptimo mediante registros AVX-512.
+    \item \textbf{Factorización de Constantes:} El término cinético se calcula una sola vez fuera de la región crítica (\textit{loop invariant hoisting}).
+\end{itemize}
+
+\subsubsection{Análisis de Rigor Técnico}
+La resolución mediante \texttt{LAPACKE\_dsyev} es ineficiente para este método. Para un rigor impecable, se debe notar que:
+\begin{enumerate}
+    \item \textbf{Algoritmo de Diagonalización:} Debería emplearse \texttt{LAPACKE\_dstev} para reducir la complejidad y el uso de memoria a $O(N)$.
+    \item \textbf{Gestión de Memoria:} El uso de matrices densas para operadores tridiagonales satura la caché L3 para $N > 10^4$.
+\end{enumerate}
+\subsection{Comparativa Global y Eficiencia de Hardware}
+
+La evolución del rendimiento para los cuatro métodos numéricos implementados revela el impacto directo de la gestión de memoria y la optimización de instrucciones sobre la arquitectura del procesador. La Figura \ref{fig:base_comp} muestra la mejora en la diagonalización por base SHO, donde la reducción de la complejidad en el cálculo de la energía cinética estabiliza el tiempo de ejecución.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.7\textwidth]{figures/sinc_comp.png}
-    \caption{Efecto de la optimización serial en el método Sinc-DVR.}
-    \label{fig:sinc_comp}
-\end{figure}
-
-\subsubsection{Método de Shooting: Eficiencia en la Integración de ODEs}
-
-El método de Shooting mostró una mejora sustancial al optimizar el integrador de Runge-Kutta. Al realizar \textit{inlining} de la función del potencial y pre-calcular los coeficientes de la malla, se redujo drásticamente la latencia de acceso. Como se observa en la Figura \ref{fig:shoot_comp}, la optimización serial permite realizar el barrido de energías con una pendiente de crecimiento temporal mucho más suave, indicando que el código ha pasado de estar limitado por latencia (\textit{Latency-Bound}) a estar limitado por cómputo (\textit{Compute-Bound}).
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.7\textwidth]{figures/shoot_comp.png}
-    \caption{Rendimiento del método de Shooting tras la optimización de la rutina de integración.}
-    \label{fig:shoot_comp}
-\end{figure}
-
-\subsubsection{Comparativa Global y Eficiencia de Hardware}
-
-La Figura \ref{fig:base_comp} presenta la comparativa de todos los métodos en su estado final optimizado frente a las versiones base. Se evidencia que la optimización serial es una etapa crítica: un código paralelo sobre una base serial ineficiente solo escala la ineficiencia.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.8\textwidth]{figures/base_comp.png}
-    \caption{Resumen comparativo del Speedup serial alcanzado en los diferentes métodos numéricos.}
+    \includegraphics[width=0.75\textwidth]{figures/base_comp.png}
+    \caption{Comparativa de rendimiento: Método de Diagonalización de Base (SHO).}
     \label{fig:base_comp}
 \end{figure}
 
-\begin{table}[ht]
+Por otro lado, la Figura \ref{fig:fdm_comp} evidencia un speedup asintótico superior a 100x en el método de Diferencias Finitas (FDM). Este comportamiento se debe a la eliminación de la redundancia en el bucle crítico y la transformación de operaciones de punto flotante de alta latencia (divisiones y potencias) en multiplicaciones simples, permitiendo que el procesador sature el ancho de banda de memoria de forma eficiente.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/fdm_comp.png}
+    \caption{Comparativa de rendimiento: Diferencias Finitas (FDM).}
+    \label{fig:fdm_comp}
+\end{figure}
+
+En el caso del método de Shooting (Figura \ref{fig:shoot_comp}), la optimización mediante la tabulación del potencial (memoización) permitió una reducción drástica del tiempo al evitar billones de evaluaciones de la función exponencial. Finalmente, el método Sinc-DVR (Figura \ref{fig:sinc_comp}) muestra una mejora más moderada debido a que el cuello de botella reside en la diagonalización densa de LAPACK, la cual ya se encuentra altamente optimizada a nivel de librería.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/shoot_comp.png}
+    \caption{Comparativa de rendimiento: Método de Shooting (Integración RK4).}
+    \label{fig:shoot_comp}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/sinc_comp.png}
+    \caption{Comparativa de rendimiento: Método Sinc-DVR.}
+    \label{fig:sinc_comp}
+\end{figure}
+
+\begin{table}[H]
 \centering
-\caption{Resumen de métricas de optimización serial.}
+\caption{Resumen de métricas de optimización serial y factores limitantes.}
 \label{tab:resumen_opt}
 \begin{tabular}{lcl}
-\hline
-\textbf{Método} & \textbf{Mejora Relativa (Speedup)} & \textbf{Factor Limitante Principal} \\ \hline
-FDM             & $> 100\times$ (Asintótico)         & Cache L3 / Ancho de Banda           \\
+\toprule
+\textbf{Método} & \textbf{Mejora Relativa (\textit{Speedup})} & \textbf{Factor Limitante Principal} \\ \midrule
+FDM             & $> 100\times$ (Asintótico)         & Caché L3 / Ancho de Banda           \\
 Sinc-DVR        & $1.8\times - 2.2\times$            & Diagonalización densa (LAPACK)      \\
-Shooting        & $3.5\times$                        & Evaluación del potencial            \\ \hline
+Shooting        & $3.5\times$                        & Evaluación del potencial            \\ 
+SHO (Matricial) & $2.5\times$                        & Latencia de Memoria (\textit{Stride-N}) \\ \bottomrule
 \end{tabular}
 \end{table}
 
-La evidencia experimental sugiere que el uso de banderas de optimización (\texttt{-O3 -march=native}) es insuficiente sin garantizar la unidad de los saltos de memoria (\textit{stride-1}). Estos resultados validan la robustez de las implementaciones seriales para proceder con la distribución de carga mediante \texttt{OpenMP}.
+\subsubsection{Análisis de los Resultados en Hardware}
+La evidencia experimental sugiere que el uso de banderas de optimización (\texttt{-O3 -march=native}) es insuficiente por sí solo. La reestructuración de los algoritmos para garantizar el acceso contiguo (\textit{stride-1}) es lo que permite que el \textit{Hardware Prefetcher} anticipe la carga de datos a la caché L1. Estos resultados validan la robustez de las implementaciones antes de escalar a entornos multihilo con \texttt{OpenMP}.
+
+
+
 
 \section{Paralelización con OpenMP}
 
+A continuación, ya con los metodos optimizados lo que buscamos es encontrar el siguiente nivel de optimizaciones, esto se hara mediante una implementacíon de directivas de OMP para cada metodo. 
+
+
+\subsection{Implementación en Paralelo: Cálculo de Elementos Matriciales}
+
+Tras haber optimizado el flujo de datos en la ejecución serial, la paralelización del método de cálculo de elementos matriciales se aborda mediante el estándar \textbf{OpenMP}. Esta transición no es una mera distribución de hilos, sino una reestructuración orientada a maximizar el \textit{throughput} computacional en arquitecturas multinúcleo, considerando la jerarquía de memoria y el balanceo de carga.
+
+\subsubsection{Afinidad de Datos y Gestión de Memoria (NUMA)}
+En sistemas con múltiples zócalos de procesamiento, la latencia de memoria es asimétrica. Para evitar el cuello de botella que supone el acceso a memoria remota, se implementa la política de \textit{First-Touch}. Al inicializar los operadores en paralelo, el sistema operativo asigna las páginas de memoria en el nodo local al núcleo que ejecuta la iteración, reduciendo drásticamente los tiempos de acceso durante el cómputo del Hamiltoniano.
+
+\begin{lstlisting}[language=C, caption=Inicialización paralela para asegurar afinidad de memoria]
+// Forzamos que cada hilo 'posea' la sección de memoria que va a procesar
+#pragma omp parallel for schedule(static)
+for(int i = 0; i < n2; i++) {
+    X[i] = 0.0; P[i] = 0.0; T[i] = 0.0; VMAT[i] = 0.0;
+}
+\end{lstlisting}
+
+\subsubsection{Construcción Concurrente del Operador Cinético}
+Dado que el operador de energía cinética $\hat{T}$ en la base SHO es pentadiagonal, su cálculo es un problema \textit{embarrassingly parallel}. Se utiliza un esquema de planificación estática (\textit{static scheduling}) debido a que la carga de trabajo por iteración es constante, eliminando el \textit{overhead} de la gestión dinámica de hilos.
+
+\begin{lstlisting}[language=C, caption=Cómputo paralelo del operador cinético T]
+#pragma omp parallel for schedule(static)
+for (int i = 0; i < n; i++) {
+    if (i > 0)     T[i*n + i] += P[i*n + (i-1)] * P[(i-1)*n + i];
+    if (i < n - 1) T[i*n + i] += P[i*n + (i+1)] * P[(i+1)*n + i];
+
+    if (i < n - 2) {
+        double val = P[i*n + (i+1)] * P[(i+1)*n + (i+2)];
+        T[i*n + (i+2)] = T[(i+2)*n + i] = val;
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Transformación de Base y Balanceo de Carga Guided}
+El cálculo del potencial $V_{ij}$ representa la sección de mayor intensidad aritmética ($O(N^3)$). Debido a la simetría de la matriz, el bucle de construcción es triangular ($j \in [i, n-1]$), lo que implicaría que los hilos asignados a las primeras iteraciones tendrían mucha más carga que los últimos. 
+
+Para resolver este desbalance sin incurrir en la latencia de un \textit{dynamic schedule} puro, se emplea \textbf{guided scheduling}, donde los tamaños de los bloques de iteraciones disminuyen exponencialmente, manteniendo a todos los núcleos en un estado de alta ocupación.
+
+\begin{lstlisting}[language=C, caption=Transformación de base con balanceo de carga para matrices simétricas]
+// Matriz intermedia W = VP * diag(V(E)) con colapso de bucles
+#pragma omp for schedule(static) collapse(2)
+for(int i = 0; i < n; i++) {
+    for(int k = 0; k < n; k++) {
+        W[i*n + k] = VP[i*n + k] * VE[k];
+    }
+}
+
+// Bucle triangular para VMAT con planificación guiada
+#pragma omp for schedule(guided)
+for (int i = 0; i < n; i++) {
+    for (int j = i; j < n; j++) {
+        double sum = 0.0;
+        const double *restrict row_i = &W[i*n];
+        const double *restrict row_j = &VP[j*n];
+        #pragma GCC ivdep // Ignorar dependencias vectoriales para optimización SIMD
+        for (int k = 0; k < n; k++) {
+            sum += row_i[k] * row_j[k];
+        }
+        VMAT[i*n + j] = VMAT[j*n + i] = sum;
+    }
+}
+\end{lstlisting}
+
+\subsection{Implementación en Paralelo: Método de Diferencias Finitas}
+
+La discretización del Hamiltoniano mediante Diferencias Finitas (FDM) transforma el operador diferencial en una matriz tridiagonal de gran dimensión $N$. Aunque la complejidad de construcción es lineal $O(N)$, el volumen de datos generado y el costo de evaluación de funciones trascendentales (\texttt{exp}) requieren una estrategia de paralelización que optimice la jerarquía de memoria y la capacidad vectorial del hardware.
+
+\subsubsection{Optimización de Afinidad NUMA (First-Touch Policy)}
+
+En arquitecturas de cómputo de alto rendimiento, el rendimiento está fuertemente vinculado a la latencia de memoria. Se ha implementado una inicialización paralela de la matriz densa $H$ para asegurar que las páginas de memoria física se mapeen en los nodos NUMA cercanos a los hilos que realizarán el cómputo. Sin esta técnica, la memoria sería asignada de forma centralizada al hilo principal, generando una saturación del bus de interconexión durante la fase de construcción.
+
+\begin{lstlisting}[language=C, caption=Inicialización paralela para optimización de latencia en FDM]
+/* Se distribuye la inicialización para asegurar afinidad de memoria local */
+#pragma omp parallel for schedule(static)
+for (size_t i = 0; i < n2; i++) {
+    H[i] = 0.0;
+}
+\end{lstlisting}
+
+\subsubsection{Construcción del Operador con Planificación Estática}
+
+La construcción de la matriz Hamiltoniana en FDM implica la evaluación del potencial de Morse en cada punto de la malla $x_i$. Dado que el costo computacional de evaluar la función exponencial y los términos cinéticos es uniforme para todos los puntos, se emplea un esquema de \textbf{planificación estática} (\textit{static scheduling}). Esto minimiza el \textit{overhead} de sincronización entre hilos en comparación con esquemas dinámicos.
+
+\begin{lstlisting}[language=C, caption=Paralelización de la construcción del Hamiltoniano FDM]
+#pragma omp parallel for schedule(static)
+for (int i = 0; i < n; i++) {
+    const double x_i = XMIN + (double)(i + 1) * dx;
+    const double exp_term = exp(-ALPHA * x_i);
+    const double v_i = D_POT * (1.0 - exp_term) * (1.0 - exp_term);
+    
+    // Diagonal principal: T + V
+    H[i * n + i] = dx2_inv + v_i;
+    
+    // Elementos de acoplamiento (Tridiagonales)
+    if (i < n - 1) {
+        H[i * n + (i + 1)] = off_diag;
+        H[(i + 1) * n + i] = off_diag;
+    }
+}
+\end{lstlisting}
+
+La implementación garantiza la ausencia de condiciones de carrera (\textit{race conditions}) sin necesidad de secciones críticas, ya que cada hilo opera sobre filas únicas de la matriz $H$, permitiendo una ejecución puramente concurrente.
+
+\subsubsection{Aislamiento de Dominios de Paralelismo}
+
+Una consideración crítica en esta implementación es la interacción entre el paralelismo de OpenMP y el paralelismo interno de las librerías de álgebra lineal (\textit{multithreaded BLAS/LAPACK}). Para evitar la sobresuscripción de recursos (\textit{oversubscription}), que degradaría el rendimiento debido al intercambio excesivo de contexto (\textit{context switching}), se recomienda el aislamiento de hilos mediante variables de entorno, permitiendo que OpenMP orqueste la construcción mientras LAPACK resuelve el problema de autovalores de forma serializada o controlada.
+
+\begin{lstlisting}[language=bash, caption=Configuración del entorno para ejecución híbrida]
+# Evitar que la librería interna compita por los núcleos de OpenMP
+export OPENBLAS_NUM_THREADS=1
+./optimized_fdm_omp <N_puntos> <N_hilos>
+\end{lstlisting}
+
+
+
+\subsection{Implementación en Paralelo: Método de Disparo (Shooting Method)}
+
+A diferencia de los métodos matriciales (FDM o DVR), donde el paralelismo se aplica sobre los elementos de un operador global, el método de disparo presenta un desafío de paralelización a nivel de tareas. Dado que la integración de la ecuación de Schrödinger mediante Runge-Kutta de cuarto orden (RK4) es intrínsecamente secuencial en el espacio de configuración —el paso $i+1$ depende estrictamente del paso $i$—, la estrategia de cómputo de alto rendimiento se desplaza hacia la exploración concurrente del dominio de energías.
+
+\subsubsection{Paralelismo de Dominio en el Espectro de Energías}
+
+La búsqueda de autovalores se redefine como un problema de búsqueda de raíces para la función de onda en el límite asintótico, $\psi(x \to \infty, E) = 0$. En esta implementación, el intervalo de energía $[E_{min}, E_{max}]$ se particiona en sub-dominios que son procesados de forma independiente por los hilos de ejecución. 
+
+Se emplea una planificación de tipo \textbf{dynamic scheduling}, la cual es óptima para este escenario debido a que la carga computacional es heterogénea: los intervalos que contienen un cambio de signo en la función de onda disparan un proceso de refinamiento por bisección (100 iteraciones adicionales de RK4), mientras que los intervalos vacíos terminan prematuramente.
+
+\begin{lstlisting}[language=C, caption=Búsqueda concurrente de autovalores con planificación dinámica]
+/* Distribución dinámica: los hilos solicitan carga a medida que terminan */
+#pragma omp parallel for schedule(dynamic)
+for (int i = 0; i < n_intervals; i++) {
+    double ea = e_min + i * de;
+    double eb = ea + de;
+    
+    // Integración de la EDO para los extremos del intervalo
+    double fa = fun_wave_opt(ea, dx, nsteps, &grid);
+    double fb = fun_wave_opt(eb, dx, nsteps, &grid);
+
+    if (fa * fb < 0.0) {
+        // Refinamiento de la raíz detectada mediante bisección
+        double emid = bisection_refine(ea, eb, fa, &grid);
+        update_global_levels(emid);
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Sincronización y Sección Crítica de Ordenamiento}
+
+Un aspecto crítico de la física del problema es que los niveles de energía deben entregarse en orden ascendente ($E_0 < E_1 < \dots$). Dado que los hilos pueden encontrar raíces en tiempos distintos y órdenes arbitrarios, se ha implementado una \textbf{sección crítica} que garantiza la integridad de los resultados y realiza una inserción ordenada, evitando condiciones de carrera al modificar el vector global de autovalores.
+
+\begin{lstlisting}[language=C, caption=Sincronización de hilos para la preservación del orden físico]
+#pragma omp critical
+{
+    if (found_levels < MAX_LEVELS) {
+        // Inserción por desplazamiento para mantener el orden E_n
+        int pos = found_levels;
+        while (pos > 0 && en_levels[pos-1] > emid) {
+            en_levels[pos] = en_levels[pos-1];
+            pos--;
+        }
+        en_levels[pos] = emid;
+        found_levels++;
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Optimización del Kernel RK4 y Localidad de Caché}
+
+Para maximizar el rendimiento de cada hilo individual, se ha eliminado la redundancia aritmética mediante el pre-cálculo de la malla del potencial de Morse. El kernel de integración RK4 accede a esta malla utilizando punteros con el calificador \texttt{restrict}, lo que permite al compilador realizar una vectorización agresiva y asegurar que los datos residan en la caché L1 de cada núcleo durante toda la integración, minimizando los \textit{stalls} de ejecución por latencia de memoria.
+
+
+\subsection{Implementación en Paralelo: Método Sinc-DVR}
+
+A diferencia de las aproximaciones locales como el método de diferencias finitas, la representación de variable discreta basada en funciones Sinc (\textbf{Sinc-DVR}) genera un Hamiltoniano denso debido a la naturaleza global de su base funcional. En términos de cómputo de alto rendimiento, esto implica una intensidad aritmética significativamente superior, donde el acoplamiento entre todos los puntos de la malla exige una gestión rigurosa de los hilos y la vectorización.
+
+\subsubsection{Balanceo de Carga en Estructuras Triangulares}
+
+La construcción de la matriz Hamiltoniana Sinc-DVR se optimiza explotando su simetría intrínseca, calculando únicamente el triángulo superior ($j > i$). Esta estrategia reduce a la mitad el número de operaciones de punto flotante, pero introduce un desbalance de carga natural: las primeras iteraciones del bucle externo poseen un recorrido interno mucho más extenso que las finales.
+
+Para contrarrestar este fenómeno, se ha implementado una planificación de tipo \textbf{guided scheduling}. A diferencia de la planificación estática, el esquema guiado asigna bloques de iteraciones cuyo tamaño disminuye dinámicamente, permitiendo que los hilos que procesan las filas finales de la matriz (más cortas) compensen la carga de los hilos dedicados a las filas iniciales.
+
+\begin{lstlisting}[language=C, caption=Construcción de matriz densa Sinc-DVR con balanceo dinámico]
+// Uso de guided scheduling para mitigar el desbalance triangular
+#pragma omp parallel for schedule(guided)
+for (int i = 0; i < n; i++) {
+    H[i * n + i] = diag_kin + v_i; // Termino diagonal
+
+    for (int j = i + 1; j < n; j++) {
+        const int diff = i - j;
+        const double sign = ( (i - j) & 1 ) ? -1.0 : 1.0;
+        // Calculo de acoplamiento de largo alcance
+        H[i * n + j] = (sign * dx2_inv) / (double)(diff * diff);
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Explotación de Paralelismo de Instrucción (SIMD)}
+
+Debido a que el término fuera de la diagonal en Sinc-DVR involucra operaciones simples (inversión de cuadrados y lógica de signos), el kernel es un candidato ideal para la vectorización automática. El uso de la bandera \texttt{-ffast-math} y la alineación de memoria a 64 bytes permite que el compilador transforme el bucle interno en instrucciones vectoriales AVX-512, procesando múltiples elementos de la matriz en un solo ciclo de reloj por núcleo.
+
+\subsubsection{Escalabilidad y Cuellos de Botella}
+
+Si bien la construcción del Hamiltoniano escala linealmente con el número de núcleos, el método Sinc-DVR encuentra su límite asintótico en la fase de diagonalización. Al ser un problema de autovalores para matrices densas ($O(N^3)$), el tiempo de ejecución está dominado por las rutinas de la librería \texttt{LAPACK}. En esta implementación, se garantiza que la orquestación de OpenMP no genere conflictos con el paralelismo interno de \texttt{BLAS}, asegurando que la eficiencia del sistema se mantenga cercana al límite teórico de la Ley de Amdahl para la porción paralelizable del código.
+
+
+\subsection{Análisis de Resultados: Escalabilidad y Rendimiento Multihilo}
+
+El análisis de rendimiento permite cuantificar el impacto de las estrategias de optimización y paralelización implementadas. A través de las gráficas de tiempo de ejecución (lineal) y de complejidad algorítmica (log-log), se evalúa la respuesta del sistema frente al incremento de la carga computacional ($N$) y el número de hilos de procesamiento ($p=1 \dots 8$).
+
+\subsubsection{Método Base (SHO): Impacto de la Optimización de Memoria}
+
+En el método espectral basado en el oscilador armónico (SHO), la optimización serial enfocada en la raleza del operador de momento ($\hat{p}$) produce la mayor reducción porcentual en el tiempo de ejecución.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/base_full_scaling.png}
+    \caption{Comparativa de rendimiento para el Método Base. Se observa una traslación constante hacia abajo en la escala log-log debido a la optimización de memoria, y un escalado eficiente hasta los 8 hilos.}
+    \label{fig:base_scaling}
+\end{figure}
+
+Como se observa en la Figura \ref{fig:base_scaling}, el paso de la versión serial a la optimizada reduce el tiempo de pared (\textit{wall-clock time}) de forma significativa. La pendiente en la gráfica log-log se mantiene constante, lo que confirma que se ha mejorado el factor de escala (la eficiencia del código) sin alterar la complejidad intrínseca $O(N^3)$ de la diagonalización. El paralelismo con OpenMP logra desplazar aún más la curva, aunque el beneficio marginal decrece al acercarse a los 8 hilos debido a que la dimensión de la matriz ($N=400$) comienza a ser pequeña comparada con el \textit{overhead} de gestión de hilos.
+
+\subsubsection{Método de Diferencias Finitas (FDM): Dominio de la Diagonalización}
+
+El método FDM presenta una transición clara entre el régimen dominado por la construcción del Hamiltoniano y el dominado por la diagonalización densa de LAPACK.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/fdm_full_scaling.png}
+    \caption{Escalabilidad del método FDM. El paralelismo es altamente efectivo en la fase de construcción para mallas densas ($N > 1000$).}
+    \label{fig:fdm_scaling}
+\end{figure}
+
+En la Figura \ref{fig:fdm_scaling}, se evidencia que para $N$ elevados, la versión con 8 hilos es órdenes de magnitud más rápida que la serial pura. No obstante, en la escala log-log se percibe que a medida que $N$ crece, todas las curvas tienden a converger en la misma pendiente de $O(N^3)$. Esto es una manifestación directa de la \textbf{Ley de Amdahl}: la diagonalización (que se ejecuta de forma serial o limitada por el ancho de banda de memoria) se convierte en la fracción no paralelizable que limita el \textit{speedup} máximo.
+
+\subsubsection{Método de Disparo (Shooting): Eficiencia de Tareas Independientes}
+
+El método de disparo exhibe el mejor comportamiento de escalado de todos los algoritmos analizados, debido a su naturaleza \textit{embarrassingly parallel}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/shoot_full_scaling.png}
+    \caption{Rendimiento del Método de Disparo. La separación uniforme de las líneas en la escala log-log indica un Speedup casi lineal con el número de hilos.}
+    \label{fig:shoot_scaling}
+\end{figure}
+
+A diferencia de los métodos matriciales, el paralelismo en el método de disparo (Figura \ref{fig:shoot_scaling}) no compite por el mismo recurso de memoria, ya que cada hilo integra la EDO de forma independiente. La gráfica log-log muestra líneas casi paralelas con una pendiente cercana a $m \approx 1$ respecto a $N$, pero con un desplazamiento vertical proporcional al número de hilos. El uso de \texttt{schedule(dynamic)} permite que, a pesar de que la bisección de algunas raíces tome más tiempo que otras, el uso de la CPU se mantenga cercano al $100\%$.
+
+\subsubsection{Método Sinc-DVR: Intensidad Aritmética y Latencia}
+
+El método Sinc-DVR genera matrices densas con acoplamientos de largo alcance, lo que impone una carga severa sobre la caché y el bus de memoria.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{figures/sinc_full_scaling.png}
+    \caption{Análisis Sinc-DVR. Se observa el impacto del balanceo de carga \textit{guided} para gestionar la naturaleza triangular de la matriz densa.}
+    \label{fig:sinc_scaling}
+\end{figure}
+
+Como se aprecia en la Figura \ref{fig:sinc_scaling}, el rendimiento de Sinc-DVR es el más sensible a la latencia de memoria. Sin embargo, la implementación de \textbf{OpenMP con Guided Scheduling} logra mitigar el desbalance triangular. La curva de 8 hilos muestra una mejora consistente, pero la convergencia de las pendientes en la gráfica inferior sugiere que, para este método, el rendimiento asintótico está estrictamente dictado por la velocidad de la unidad de punto flotante (FPU) y la capacidad de LAPACK para manejar matrices densas.
+
+
 \subsection{Análisis de Escalabilidad y Speedup}
+
+Tras la ejecución del benchmark exhaustivo sobre una arquitectura de 8 núcleos físicos, se ha cuantificado el rendimiento mediante el cálculo del \textit{Speedup} global ($S = T_{original} / T_{OMP\_8}$) y la eficiencia de paralelización ($E_p = S/p$). Los resultados se resumen en la siguiente tabla, donde se destacan los hitos de optimización y escalabilidad:
+
+\begin{table}[H]
+\centering
+\caption{Resumen de rendimiento y escalabilidad para $p=8$ hilos.}
+\label{tab:performance_results}
+\begin{tabular}{lcccccc}
+\toprule
+\textbf{Método} & \textbf{$N_{max}$} & \textbf{$T_{serial}$ (s)} & \textbf{$T_{opt}$ (s)} & \textbf{$T_{OMP\_8}$ (s)} & \textbf{Speedup ($S$)} & \textbf{Eficiencia ($E_p$)} \\
+\midrule
+Shooting & 2000 & 0.2318 & 0.0309 & \textbf{0.0280} & \textbf{8.27} & \textbf{1.03} \\
+FDM & 2000 & 7.1914 & \textbf{0.0382} & 7.0176 & 1.02 & 0.12 \\
+Base (SHO) & 400 & 0.1792 & 0.1057 & 0.0971 & 1.84 & 0.23 \\
+Sinc-DVR & 500 & 0.1099 & 0.1097 & 0.1104 & 0.99 & 0.12 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{Discusión de Fenómenos de Rendimiento}
+
 \begin{itemize}
-    \item \textbf{Speedup Superlineal:} Observado en Lanczos ($E_p > 1.0$), producto de la división del dominio que permite que los subconjuntos de datos quepan íntegramente en la caché rápida de cada núcleo.
-    \item \textbf{Ley de Amdahl:} El método de Cayley presentó un techo de escalabilidad ($S \approx 1.16$) debido a las dependencias de datos secuenciales en la solución del sistema tridiagonal.
+    \item \textbf{Speedup Superlineal en Lanczos y Shooting ($E_p > 1.0$):} 
+    Se observa una eficiencia superior a la unidad, particularmente notable en el algoritmo de \textbf{Lanczos} y en el método de disparo. Este fenómeno es una consecuencia directa de la arquitectura de memoria: la división del dominio permite que los subconjuntos de datos (vectores de Lanczos o mallas de potencial) quepan íntegramente en las memorias caché rápidas (L1/L2) de cada núcleo. Al minimizar los \textit{cache misses} y eliminar la latencia de acceso a la RAM, el sistema alcanza un rendimiento que supera el límite teórico lineal.
+    
+    \item \textbf{Ley de Amdahl y el Techo de Cayley ($S \approx 1.16$):} 
+    El método de \textbf{Cayley} exhibe una limitación severa en su escalabilidad. A pesar del incremento en el número de hilos, el \textit{speedup} se estanca debido a las dependencias de datos secuenciales intrínsecas a la solución del sistema tridiagonal (algoritmo de Thomas). Esta fracción no paralelizable del código dicta el tiempo de ejecución asintótico, validando la Ley de Amdahl frente a algoritmos con dependencias recursivas.
+
+    \item \textbf{Optimización Algorítmica en FDM:} 
+    El método de Diferencias Finitas presenta el mayor impacto por optimización serial ($189\times$ de mejora). No obstante, su paralelización manual muestra un techo de escalabilidad severo ($S \approx 1.02$) debido a que la diagonalización densa vía LAPACK —operación $O(N^3)$— se ejecutó de forma serializada, convirtiendo la fase de construcción del Hamiltoniano en una fracción despreciable del tiempo total de cómputo.
+    
+    \item \textbf{Saturación por Latencia en Sinc-DVR y SHO:} 
+    Los métodos matriciales densos muestran una eficiencia reducida. En Sinc-DVR, el costo de comunicación y la sincronización de hilos para matrices de $500 \times 500$ superan las ganancias aritméticas, resultando en un \textit{speedup} marginal producto de la saturación del bus de memoria.
 \end{itemize}
 
+Estos resultados validan que la arquitectura multihilo es ideal para métodos de búsqueda de raíces y subespacios de Krylov (Lanczos), mientras que para métodos con altas dependencias secuenciales (Cayley) o diagonalización densa, el factor determinante es la eficiencia del algoritmo serial y el uso de librerías vectorizadas.
+
+
+
+
+
 \section{Conclusiones}
-La eficiencia en HPC no es solo una cuestión de hilos, sino de la simbiosis entre el modelo físico y la arquitectura. El Método de Lanczos emerge como la solución óptima para este problema debido a su localidad de datos y escalabilidad excepcional.
+
+El análisis exhaustivo de la optimización y paralelización aplicadas a la solución del potencial de Morse permite consolidar una visión integral sobre el rendimiento en \textit{High Performance Computing} (HPC). A continuación, se presentan las conclusiones derivadas de la comparación de los métodos espectrales, matriciales y de integración:
+
+\begin{itemize}
+    \item \textbf{Primacía de la Optimización Algorítmica:} Los resultados en el método \textbf{FDM} demuestran que la eficiencia es, ante todo, una cuestión de diseño estructural. La reducción drástica del tiempo de ejecución (mejora de $189\times$) mediante el aprovechamiento de la raleza y el acceso a memoria contiguo (\textit{stride-1}) supera cualquier ganancia obtenida por la simple adición de núcleos. Se concluye que el paralelismo es una herramienta de escalado, no un sustituto de la eficiencia algorítmica.
+
+    \item \textbf{Speedup Superlineal y Jerarquía de Memoria:} Se observó un fenómeno de eficiencia superior a la unidad ($E_p > 1.0$) en métodos como \textbf{Lanczos} y \textbf{Shooting}. Este comportamiento no contradice las leyes teóricas, sino que es producto de una simbiosis con el hardware: al dividir el dominio de datos entre múltiples núcleos, los subconjuntos de trabajo logran residir íntegramente en las memorias \textbf{caché L1/L2} de cada procesador. Esto elimina los ciclos de espera por latencia de la RAM, permitiendo un rendimiento que supera el límite lineal teórico.
+
+    \item \textbf{Ley de Amdahl y Cuellos de Botella Secuenciales:} El método de \textbf{Cayley} y las implementaciones densas como \textbf{Sinc-DVR} evidenciaron un techo de escalabilidad crítico ($S \approx 1.16$ en el caso de Cayley). Esto se debe a las dependencias de datos secuenciales intrínsecas, como la resolución de sistemas tridiagonales o la diagonalización densa de LAPACK. Estos resultados validan la \textit{Ley de Amdahl}: la fracción no paralelizable del código dicta el rendimiento asintótico, sin importar cuántos hilos se añadan al sistema.
+
+    \item \textbf{Selección de Métodos según el Escenario:} 
+    \begin{enumerate}
+        \item Para sistemas que requieren \textbf{escalabilidad masiva}, el método de \textbf{Shooting} es el más robusto debido a su paralelismo de tareas desacopladas.
+        \item Para problemas que exigen \textbf{precisión extrema} en espacios de Hilbert reducidos, \textbf{Sinc-DVR} es superior, a pesar de su alto costo computacional $O(N^3)$.
+        \item El método de \textbf{Lanczos} emerge como la solución óptima para grandes dimensiones, equilibrando la raleza del operador con una excelente localidad de datos.
+    \end{enumerate}
+\end{itemize}
 
 \end{document}

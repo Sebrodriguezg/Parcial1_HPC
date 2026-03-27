@@ -1,0 +1,2041 @@
+% ============================================================
+%  PRESENTACIÓN BEAMER – HPC: Potencial de Morse
+%  Camilo Huertas · Sebastián Rodriguez
+%  Universidad Distrital Francisco José de Caldas
+% ============================================================
+\documentclass[aspectratio=169,10pt]{beamer}
+
+% ─── TEMA BASE ───────────────────────────────────────────────
+\usetheme{Madrid}
+\usecolortheme{default}
+
+% ─── PALETA DE COLORES PERSONALIZADA ────────────────────────
+\definecolor{UDprimary}{RGB}{0,60,120}
+\definecolor{UDsecond}{RGB}{220,50,50}
+\definecolor{UDlight}{RGB}{230,240,255}
+\definecolor{UDdark}{RGB}{20,30,60}
+\definecolor{codegreen}{rgb}{0,0.55,0.2}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.50,0,0.70}
+\definecolor{backcolour}{RGB}{245,245,240}
+\definecolor{UDaccent}{RGB}{255,180,0}
+\definecolor{UDsuccess}{RGB}{30,140,60}
+
+% ─── APLICAR COLORES AL TEMA ─────────────────────────────────
+\setbeamercolor{palette primary}{bg=UDprimary,fg=white}
+\setbeamercolor{palette secondary}{bg=UDdark,fg=white}
+\setbeamercolor{palette tertiary}{bg=UDsecond,fg=white}
+\setbeamercolor{palette quaternary}{bg=UDprimary!80,fg=white}
+\setbeamercolor{structure}{fg=UDprimary}
+\setbeamercolor{section in toc}{fg=UDprimary}
+\setbeamercolor{block title}{bg=UDprimary,fg=white}
+\setbeamercolor{block body}{bg=UDlight}
+\setbeamercolor{block title alerted}{bg=UDsecond,fg=white}
+\setbeamercolor{block body alerted}{bg=UDsecond!10}
+\setbeamercolor{block title example}{bg=UDprimary!70,fg=white}
+\setbeamercolor{block body example}{bg=UDprimary!8}
+\setbeamercolor{frametitle}{bg=UDprimary,fg=white}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{author}{fg=UDlight}
+\setbeamercolor{date}{fg=UDlight}
+\setbeamercolor{itemize item}{fg=UDsecond}
+\setbeamercolor{itemize subitem}{fg=UDprimary}
+\setbeamercolor{enumerate item}{fg=UDsecond}
+
+% ─── FUENTES ─────────────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% ─── PAQUETES ESENCIALES ─────────────────────────────────────
+\usepackage{amsmath,amssymb}
+\usepackage{braket}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric,arrows.meta,positioning,shadows,fit,decorations.pathreplacing}
+\usepackage{calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{fontawesome5}
+
+% ─── ESTILO DE CÓDIGO ────────────────────────────────────────
+\lstdefinestyle{cppBeamer}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen}\itshape,
+  keywordstyle=\color{UDprimary}\bfseries,
+  keywordstyle=[2]\color{UDsecond}\bfseries,
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\tiny,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=4pt,
+  showspaces=false,
+  showstringspaces=false,
+  tabsize=2,
+  frame=single,
+  rulecolor=\color{UDprimary!40},
+  xleftmargin=8pt,
+  xrightmargin=4pt
+}
+\lstdefinestyle{fortranBeamer}{
+  backgroundcolor=\color{backcolour},
+  commentstyle=\color{codegreen}\itshape,
+  keywordstyle=\color{UDsecond}\bfseries,
+  numberstyle=\tiny\color{codegray},
+  stringstyle=\color{codepurple},
+  basicstyle=\ttfamily\tiny,
+  breaklines=true,
+  numbers=left,
+  numbersep=4pt,
+  frame=single,
+  rulecolor=\color{UDsecond!40},
+  xleftmargin=8pt,
+  xrightmargin=4pt,
+  language=Fortran
+}
+\lstset{
+  style=cppBeamer,
+  inputencoding=utf8,
+  extendedchars=true,
+  literate=
+    {á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1
+    {Á}{{\'A}}1 {É}{{\'E}}1 {Í}{{\'I}}1 {Ó}{{\'O}}1 {Ú}{{\'U}}1
+    {ñ}{{\~n}}1 {Ñ}{{\~N}}1 {ü}{{\"u}}1 {Ü}{{\"U}}1
+    {—}{{--}}1 {–}{{--}}1
+}
+
+% ─── TCOLORBOX SHORTCUTS ─────────────────────────────────────
+\newtcolorbox{conclusionbox}[1]{
+  colback=UDlight,colframe=UDprimary,
+  fonttitle=\bfseries\small,title=#1,
+  left=4pt,right=4pt,top=3pt,bottom=3pt
+}
+\newtcolorbox{alertbox}[1]{
+  colback=UDsecond!10,colframe=UDsecond,
+  fonttitle=\bfseries\small,title=#1,
+  left=4pt,right=4pt,top=3pt,bottom=3pt
+}
+\newtcolorbox{physbox}[1]{
+  colback=UDprimary!8,colframe=UDprimary!60,
+  fonttitle=\bfseries\small,title=#1,
+  left=4pt,right=4pt,top=3pt,bottom=3pt
+}
+\newtcolorbox{successbox}[1]{
+  colback=UDsuccess!10,colframe=UDsuccess,
+  fonttitle=\bfseries\small,title=#1,
+  left=4pt,right=4pt,top=3pt,bottom=3pt
+}
+
+% ─── PROGRESO Y NUMERACIÓN ───────────────────────────────────
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{%
+  \leavevmode
+  \hbox{%
+    \begin{beamercolorbox}[wd=.30\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=2pt]{palette secondary}%
+      \usebeamerfont{author in head/foot}\insertshortauthor
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.45\paperwidth,ht=2.5ex,dp=1.125ex,center]{palette tertiary}%
+      \usebeamerfont{title in head/foot}\insertshorttitle
+    \end{beamercolorbox}%
+    \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.5ex,dp=1.125ex,rightskip=4pt plus1fil]{palette primary}%
+      \usebeamerfont{date in head/foot}\hfill
+      \insertframenumber{} / \inserttotalframenumber
+    \end{beamercolorbox}%
+  }%
+}
+
+\setbeamertemplate{headline}{%
+  \begin{beamercolorbox}[ht=1.6ex,dp=0.4ex,wd=\paperwidth]{palette quaternary}%
+    \hspace{6pt}{\tiny\color{white}\insertsectionhead}
+    \hfill
+    \begin{tikzpicture}[overlay]
+      \fill[UDaccent] (0,0) rectangle (\paperwidth,0.8pt);
+    \end{tikzpicture}
+  \end{beamercolorbox}%
+}
+
+% ─── BULLETS PERSONALIZADOS ──────────────────────────────────
+\setbeamertemplate{itemize item}{\color{UDsecond}\tiny\raisebox{1pt}{$\blacksquare$}}
+\setbeamertemplate{itemize subitem}{\color{UDprimary}\tiny$\triangleright$}
+\setbeamertemplate{enumerate item}{\color{UDsecond}\bfseries\insertenumlabel.}
+
+% ─── METADATOS ───────────────────────────────────────────────
+\title[HPC: Potencial de Morse]{%
+  \textbf{Optimización y Paralelización en HPC}\\
+  \large Potencial de Morse — Cuatro Métodos Numéricos
+}
+\subtitle{Sistemas Distribuidos 2026-1 — Primer Parcial}
+\author[Huertas · Rodriguez]{%
+  \textbf{Camilo Huertas} \quad \textbf{Sebastián Rodriguez}\\
+  {\small Programa Académico de Física}
+}
+\institute[UDFJC]{%
+  Universidad Distrital Francisco José de Caldas\\
+  {\small Docente: Carlos Andrés Gómez Vasco}
+}
+\date{27 de marzo de 2026}
+
+% ============================================================
+\begin{document}
+% ============================================================
+
+% ─── PORTADA ─────────────────────────────────────────────────
+{
+\setbeamertemplate{headline}{}
+\setbeamertemplate{footline}{}
+\begin{frame}
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[UDdark] (current page.south west) rectangle (current page.north east);
+    \fill[UDprimary!80,opacity=0.7]
+      ([yshift=-0.35\paperheight]current page.north west) rectangle
+      ([yshift=0.35\paperheight]current page.south east);
+    \fill[UDsecond]
+      ([xshift=0pt]current page.south west) rectangle
+      ([yshift=0.018\paperheight,xshift=\paperwidth]current page.south west);
+    \node[anchor=north west,text=white,font=\tiny\itshape] at
+      ([xshift=6pt,yshift=-2pt]current page.north west)
+      {Universidad Distrital Francisco José de Caldas — Sistemas Distribuidos};
+  \end{tikzpicture}
+  \vspace{0.45cm}
+  \titlepage
+\end{frame}
+}
+
+% ─── TABLA DE CONTENIDO ──────────────────────────────────────
+\begin{frame}{Agenda}
+\begin{columns}[t]
+\column{0.48\textwidth}
+\tableofcontents[sections={1-6}]
+\column{0.48\textwidth}
+\tableofcontents[sections={7-12}]
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Problema Físico}
+% ============================================================
+
+\begin{frame}{El Potencial de Morse: Descripción del Sistema}
+\begin{columns}[c]
+\column{0.50\textwidth}
+\begin{physbox}{Modelo Molecular Diatómico}
+El potencial de Morse describe la energía potencial de una molécula diatómica en función de la distancia internuclear $x$:
+\[
+  V(x) = D_e \left( 1 - e^{-a(x-x_e)} \right)^2
+\]
+\end{physbox}
+\vspace{0.27cm}
+\begin{block}{Parámetros Físicos Críticos}
+\begin{itemize}\setlength\itemsep{2pt}
+  \item $D_e$: Profundidad del pozo (energía de disociación)
+  \item $x_e$: Distancia de equilibrio internuclear
+  \item $a$: Parámetro de curvatura del enlace
+  \item $\mu$: Masa reducida del sistema diatómico
+\end{itemize}
+\end{block}
+
+\column{0.46\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.98]
+  \begin{axis}[
+    width=7.6cm, height=6.4cm,
+    xlabel={$x$ (u.a.)},
+    ylabel={$V(x)$},
+    xmin=-1, xmax=5,
+    ymin=-0.2, ymax=1.2,
+    axis lines=left,
+    grid=major, grid style={gray!20},
+    tick label style={font=\tiny},
+    label style={font=\small},
+    legend style={font=\tiny, at={(0.95,0.5)}, anchor=east}
+  ]
+    % Morse potential
+    \addplot[UDprimary, very thick, domain=-0.5:5, samples=100]
+      {(1 - exp(-1.5*(x-1.0)))^2};
+    \addplot[UDsecond!70, dashed, domain=-0.5:5, samples=100]
+      {0.5*(x-1.0)^2};
+    % Energy levels
+    \addplot[UDaccent, thick, domain=0.1:3.5] {0.17};
+    \addplot[UDaccent, thick, domain=0.0:4.0] {0.45};
+    \addplot[UDaccent, thick, domain=-0.2:4.5] {0.67};
+    \addplot[UDaccent, thick, domain=-0.4:4.8] {0.84};
+    % Dissociation line
+    \addplot[UDsecond, dashed, domain=-1:5] {1.0};
+    \addlegendentry{Morse}
+    \addlegendentry{Arm. Simple}
+    \node[font=\tiny, UDsecond] at (axis cs:4.2,1.05) {$D_e$};
+    \node[font=\tiny, UDaccent] at (axis cs:4.0,0.19) {$E_0$};
+    \node[font=\tiny, UDaccent] at (axis cs:4.2,0.47) {$E_1$};
+    \node[font=\tiny, UDaccent] at (axis cs:4.4,0.69) {$E_2$};
+    \node[font=\tiny, UDaccent] at (axis cs:4.4,0.86) {$E_3$};
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[allowframebreaks]{Solución Analítica y Estados Acotados}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\begin{physbox}{Autovalores Exactos del Modelo de Morse}
+\[
+  E_n = \hbar\omega_e\!\left(n+\tfrac{1}{2}\right)
+        - \frac{\left[\hbar\omega_e\!\left(n+\tfrac{1}{2}\right)\right]^2}{4D_e}
+\]
+donde $\omega_e = a\sqrt{2D_e/\mu}$ es la frecuencia de vibración clásica.
+\end{physbox}
+\vspace{-0.18cm}
+\begin{alertbox}{\faExclamationTriangle\ Alcance del Estudio}
+Se buscan \textbf{únicamente los primeros 4 niveles de energía} ($n=0,1,2,3$) para estandarizar la comparación entre todos los métodos numéricos.\\[2pt]
+\textbf{Justificación:} Los estados superiores se acercan a $D_e$, donde divergen las aproximaciones de base finita y los métodos locales de baja resolución.
+\end{alertbox}
+
+\column{0.44\textwidth}
+\begin{block}{Dos Propiedades Físicas Fundamentales}
+\begin{enumerate}\setlength\itemsep{4pt}
+  \item \textbf{Anarmonicidad:} Los niveles se comprimen con $n$ creciente
+  \[
+    \Delta E_{n} = \hbar\omega_e\left(1 - \frac{\hbar\omega_e(n+1)}{2D_e}\right)
+  \]
+  \item \textbf{Número finito de estados:} $n_{max} < \frac{D_e}{\hbar\omega_e} - \frac{1}{2}$
+\end{enumerate}
+\end{block}
+\vspace{-0.155cm}
+\begin{successbox}{Objetivo Computacional}
+Calcular $\{E_0, E_1, E_2, E_3\}$ y cuantificar el \textbf{error absoluto} frente a la solución analítica exacta.
+\end{successbox}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Migración Fortran → C}
+% ============================================================
+
+\begin{frame}[allowframebreaks]{Migración de Fortran 77 a C: Motivación y Objetivos}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{alertbox}{\faBug\ Limitaciones del Código Fortran Original}
+\begin{itemize}\setlength\itemsep{3pt}
+  \item Subrutinas \texttt{DSYEV/DGEMM} sin interfaz moderna a LAPACKE
+  \item Gestión de memoria estática (arreglos de tamaño fijo en \texttt{COMMON})
+  \item Imposible garantizar alineación de datos para SIMD (AVX/AVX-512)
+  \item Directivas OpenMP limitadas en Fortran 77 (\texttt{!OMP} rudimentario)
+  \item Sin soporte para \texttt{restrict}, \texttt{aligned\_alloc} ni intrínsecos vectoriales
+\end{itemize}
+\end{alertbox}
+
+\column{0.46\textwidth}
+\begin{successbox}{\faRocket\ Ventajas del Ecosistema C + GCC}
+\begin{itemize}\setlength\itemsep{3pt}
+  \item \texttt{aligned\_alloc(64, ...)} $\rightarrow$ acceso AVX-512 sin penalidades
+  \item \texttt{restrict}: el compilador vectoriza sin aliasing
+  \item Interfaz directa a \texttt{LAPACKE\_dsyev} (C binding nativo)
+  \item OpenMP 4.5+ con \texttt{collapse}, \texttt{guided}, \texttt{SIMD} clauses
+  \item \texttt{-march=native -O3 -ffast-math} genera instrucciones \texttt{vmovapd}
+\end{itemize}
+\end{successbox}
+\end{columns}
+
+\vspace{0.27cm}
+\begin{center}
+\begin{tikzpicture}[
+    node distance=1.2cm and 1.5cm, % vertical and horizontal distance
+    auto, 
+    font=\small,
+    >=Stealth, % Tip de flecha global
+    thick
+]
+  % --- PRIMERA FILA (Derecha) ---
+  \node[draw,fill=UDsecond!20,rounded corners,minimum width=2.5cm,minimum height=0.7cm] (f77) {Fortran 77};
+  
+  \node[draw,fill=UDaccent!30,rounded corners,minimum width=2.5cm,minimum height=0.7cm, right=of f77] (anl) {Análisis HPC};
+  
+  \node[draw,fill=UDprimary!20,rounded corners,minimum width=2.5cm,minimum height=0.7cm, right=of anl] (cser) {C serial};
+
+  % --- SEGUNDA FILA (Abajo y hacia la izquierda) ---
+  % Bajamos desde cser
+  \node[draw,fill=UDprimary!40,rounded corners,minimum width=2.5cm,minimum height=0.7cm, below=1.2cm of cser] (copt) {C optimizado};
+  
+  % Continuamos a la izquierda de copt
+  \node[draw,fill=UDsuccess!40,rounded corners,minimum width=2.5cm,minimum height=0.7cm, left=of copt] (comp) {C + OpenMP};
+
+  % --- ETIQUETAS (Relativas a los nodos) ---
+  \node[above=0.05cm of f77, font=\tiny, UDsecond]  {Referencia};
+  \node[above=0.05cm of anl, font=\tiny]           {Profiling};
+  \node[above=0.05cm of cser, font=\tiny]          {Porteo};
+  \node[below=0.05cm of copt, font=\tiny]          {Localidad};
+  \node[below=0.05cm of comp, font=\tiny, UDsuccess] {Paralelismo};
+
+  % --- CONEXIONES ---
+  \draw[->, UDprimary] (f77) -- (anl);
+  \draw[->, UDprimary] (anl) -- (cser);
+  \draw[->, UDprimary] (cser) -- (copt); % Conexión vertical
+  \draw[->, UDsuccess] (copt) -- (comp); % Conexión hacia la izquierda
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+% ============================================================
+\section{Métodos Numéricos: Fundamento Físico}
+% ============================================================
+
+% --- DIAPOSITIVA 1: Teoría y Ecuaciones ---
+\begin{frame}{Método 1 — Diagonalización en Base SHO (Teoría)}
+
+\begin{physbox}{Ecuación de Schrödinger en Base Discreta}
+Se resuelve $\hat{H}\ket{\psi} = E\ket{\psi}$ expandiendo en la base $\{\ket{n}\}$ del oscilador armónico lineal (LHO).
+\end{physbox}
+
+\vspace{0.4cm}
+
+\textbf{Operadores en la Base de Fock:}
+
+Los operadores $\hat{X}$ y $\hat{P}$ son tridiagonales:
+\[
+  X_{ij} , P_{ij} \propto  \frac{1}{\sqrt{2}}\!\left(\sqrt{j}\,\delta_{i,j-1} + \sqrt{i}\,\delta_{j,i-1}\right)
+\]
+
+\vspace{0.2cm}
+
+\textbf{Construcción del Potencial:}
+\[
+  V_{ij} = \sum_{\gamma=1}^N (V_P)_{i\gamma}\, V(x_\gamma)\, (V_P)_{j\gamma}
+\]
+
+\vspace{0.2cm}
+
+\textbf{Hamiltoniano Total:}
+\[
+  \mathbb{H} = \frac{1}{2\mu}\mathbb{P}^2 + \mathbb{V}
+\]
+
+\end{frame}
+
+
+% --- DIAPOSITIVA 2: Estructura y Costo Computacional ---
+% --- DIAPOSITIVA 2: Estructura y Costo Computacional ---
+\begin{frame}{Método 1 — Diagonalización en Base SHO (Estructura y Costo)}
+
+\begin{columns}[T] % Alineación superior
+
+% --- Columna Izquierda: Gráfico TikZ ---
+\column{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.85] 
+  \draw[-Stealth,UDprimary,thick] (0,0) -- (4.2,0) node[right,font=\scriptsize]{$n$ (índice)};
+  \draw[-Stealth,UDprimary,thick] (0,0) -- (0,4.2) node[above,font=\scriptsize]{$m$ (índice)};
+  \foreach \i in {0,...,3} {
+    \foreach \j in {0,...,3} {
+      \pgfmathsetmacro{\val}{abs(\i-\j) < 2 ? 1 : 0}
+      \ifnum\i=\j
+        \fill[UDprimary!60] (\i*0.9+0.05,\j*0.9+0.05) rectangle (\i*0.9+0.85,\j*0.9+0.85);
+      \else
+        \ifnum\numexpr\i-\j\relax=1
+          \fill[UDsecond!50] (\i*0.9+0.05,\j*0.9+0.05) rectangle (\i*0.9+0.85,\j*0.9+0.85);
+        \else
+          \ifnum\numexpr\j-\i\relax=1
+            \fill[UDsecond!50] (\i*0.9+0.05,\j*0.9+0.05) rectangle (\i*0.9+0.85,\j*0.9+0.85);
+          \else
+            \fill[gray!10] (\i*0.9+0.05,\j*0.9+0.05) rectangle (\i*0.9+0.85,\j*0.9+0.85);
+          \fi
+        \fi
+      \fi
+    }
+  }
+  \node[font=\scriptsize,white] at (0.45,0.45) {$X_{00}$};
+  \node[font=\scriptsize] at (1.85,2.35) {$\cdots$};
+  \node[below,font=\scriptsize,UDprimary] at (2,-0.2) {Estructura Tridiagonal de $\hat{X}$};
+  \draw[decorate,decoration={brace,amplitude=5pt},UDsecond,thick] (-0.1,3.7) -- (-0.1,-0.1) node[midway,left=3pt,font=\scriptsize,UDsecond]{$N$};
+\end{tikzpicture}
+\end{center}
+
+% --- Columna Derecha: Caja de Costo Computacional ---
+\column{0.5\textwidth}
+\vspace{0.8cm} % Ajuste vertical para que quede centrada respecto al gráfico
+\begin{alertbox}{Costo Computacional}
+\begin{itemize}
+  \item Construcción: $\mathcal{O}(N)$ (tridiagonal)
+  \item Diagonalización: $\mathcal{O}(N^3)$ vía \texttt{DSYEV}
+  \item Memoria: $\mathcal{O}(N^2)$
+\end{itemize}
+\end{alertbox}
+
+\end{columns}
+
+\end{frame}
+% ─────────────────────────────────────────────────────────────
+\begin{frame}{Método 2 — Diferencias Finitas (FDM): Fundamento}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{physbox}{Discretización del Operador Cinético}
+La derivada segunda se aproxima por diferencia central:
+\[
+  \left.\frac{d^2\psi}{dx^2}\right|_{x_i} \approx \frac{\psi_{i+1} - 2\psi_i + \psi_{i-1}}{\Delta x^2} + \mathcal{O}(\Delta x^2)
+\]
+\end{physbox}
+
+\vspace{0.18cm}
+\textbf{Hamiltoniano Matricial Tridiagonal:}
+\[
+  H_{ij} = \begin{cases}
+    \dfrac{1}{\Delta x^2} + V(x_i) & i=j\\[6pt]
+    -\dfrac{1}{2\Delta x^2} & i=j\pm 1\\[4pt]
+    0 & \text{resto}
+  \end{cases}
+\]
+
+\vspace{0.135cm}
+\begin{block}{Convergencia y Estabilidad}
+\begin{itemize}\setlength\itemsep{2pt}
+  \item \textbf{Convergencia algebraica} $\mathcal{O}(\Delta x^2)$
+  \item Requiere $N \gtrsim 1000$ para $10^{-5}$ de error relativo en $E_{0..3}$
+  \item Costo: $\mathcal{O}(N^3)$ por diagonalización densa
+\end{itemize}
+\end{block}
+
+\column{0.46\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=0.656]
+  \begin{axis}[
+    width=6cm, height=4cm,
+    xlabel={$N$ (puntos de malla)},
+    ylabel={Error relativo $|\Delta E/E|$},
+    xmin=100, xmax=2000,
+    ymin=1e-7, ymax=1e-1,
+    ymode=log,
+    xmode=log,
+    axis lines=left,
+    grid=major, grid style={gray!20},
+    tick label style={font=\tiny},
+    label style={font=\small},
+    legend style={font=\tiny, at={(0.97,0.97)}, anchor=north east}
+  ]
+    \addplot[UDprimary, thick, mark=square*, mark size=2]
+      coordinates {(100,5e-2)(200,1.3e-2)(500,2e-3)(1000,5e-4)(2000,1.2e-4)};
+    \addplot[UDsecond, thick, mark=triangle*, mark size=2]
+      coordinates {(100,5e-2)(200,1.3e-2)(500,2e-3)(1000,5e-4)(2000,1.2e-4)};
+    \addplot[UDsuccess, thick, mark=*, mark size=2]
+      coordinates {(100,5e-2)(200,1.3e-2)(500,2e-3)(1000,5e-4)(2000,1.2e-4)};
+    \addplot[UDaccent!80!black, thick, mark=diamond*, mark size=2]
+      coordinates {(100,6e-2)(200,1.5e-2)(500,2.5e-3)(1000,6e-4)(2000,1.5e-4)};
+    \addlegendentry{$E_0$}
+    \addlegendentry{$E_1$}
+    \addlegendentry{$E_2$}
+    \addlegendentry{$E_3$}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+\begin{alertbox}{Rango Óptimo FDM}
+$\mathbf{N \in [1000, 2000]}$: error $< 10^{-4}$\\
+Menor $N$: error de discretización $\uparrow$\\
+Mayor $N$: costo $O(N^3)$ prohibitivo
+\end{alertbox}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+% --- DIAPOSITIVA 1: Fundamento Físico y Numerov ---
+\begin{frame}{Método 3 — Shooting + Numerov (Fundamento)}
+
+\begin{physbox}{Ecuación de Schrödinger como IVP}
+Se reescribe la ETID como EDO de 2do orden:
+\[
+  \frac{d^2\psi}{dx^2} = \hat{Q}(x,E)\psi,\quad \hat{Q} = -2\mu[E-V(x)]
+\]
+El autovalor $E$ es el \textbf{parámetro de control} que se ajusta iterativamente.
+\end{physbox}
+
+\vspace{0.4cm}
+
+\textbf{Integrador de Numerov (error $\mathcal{O}(h^6)$) donde $k^2(x) = 2\mu(E-V(x))$.:}
+\[
+  \psi_{i+1} = \frac{2(1-\frac{5h^2}{12}k_i^2)\psi_i - (1+\frac{h^2}{12}k_{i-1}^2)\psi_{i-1}}{1+\frac{h^2}{12}k_{i+1}^2}
+\]
+
+
+\vspace{0.4cm}
+
+\textbf{Teorema de Sturm-Liouville:}\\
+El estado $n$-ésimo tiene \emph{exactamente} $n$ nodos. Esto permite una \textbf{búsqueda por bisección} guiada por el conteo de nodos en la función de onda.
+
+\end{frame}
+
+
+% --- DIAPOSITIVA 2: Visualización y Parámetros ---
+\begin{frame}{Método 3 — Shooting + Numerov (Implementación)}
+
+\begin{columns}[T]
+
+% --- Columna Izquierda: Esquema del Shooting ---
+\column{0.5\textwidth}
+\begin{center}
+\begin{tikzpicture}[scale=1] % Escala aumentada para mayor claridad
+  % Energy axis
+  \draw[-Stealth,UDprimary,thick] (0,-0.3) -- (0,4.5) node[above,font=\scriptsize]{$E$};
+  % Potential schematic
+  \fill[UDlight] (0.5,0) -- (0.5,0.8) -- (1.5,0.2) -- (2.5,0.2) -- (3.5,0.8) -- (3.5,0) -- cycle;
+  \draw[UDprimary,thick] (0.3,3.5) parabola bend (2,0.1) (3.7,3.5);
+  % Levels
+  \foreach \lev/\col/\lab in {0.7/UDaccent/$E_0$, 1.4/UDaccent/$E_1$, 2.1/UDaccent/$E_2$, 2.7/UDaccent/$E_3$} {
+    \draw[\col, thick] (0.8,\lev) -- (3.2,\lev);
+    \node[right,font=\scriptsize,\col] at (3.2,\lev) {\lab};
+  }
+  % Shooting arrows
+  \draw[-Stealth,UDsecond,thick,dashed] (-0.4,1.4) -- (0.8,1.4) node[left=12pt,font=\scriptsize,UDsecond]{Disparo};
+  \node[font=\scriptsize] at (2.0,4.1) {¿$\psi(x_{max})\to 0$?};
+  \draw[-Stealth,gray] (2.0,3.9) -- (2.0,3.0);
+\end{tikzpicture}
+\end{center}
+
+% --- Columna Derecha: Caja de Rango y Complejidad ---
+\column{0.45\textwidth}
+\vspace{1.2cm}
+\begin{alertbox}{Rango Óptimo Shooting}
+\begin{itemize}
+  \item $N_{steps} \in [500, 2000]$
+  \item Tolerancia bisección: $10^{-10}$
+  \item Complejidad: $\mathcal{O}(N_{steps} \times N_{iter})$
+\end{itemize}
+\end{alertbox}
+\end{columns}
+
+\end{frame}
+% ─────────────────────────────────────────────────────────────
+% --- DIAPOSITIVA 1: Fundamento y Matriz ---
+\begin{frame}{Método 4 — Sinc-DVR (Fundamento y Operadores)}
+
+% --- Bloque Superior (Ancho completo) ---
+\begin{physbox}{Base de Funciones Cardinales Sinc}
+La función de onda se expande en funciones de Whittaker (sinc):
+\[
+  C_j(x) = \text{sinc}\!\left(\frac{\pi(x-x_j)}{\Delta x}\right) = \frac{\sin[\pi(x-x_j)/\Delta x]}{\pi(x-x_j)/\Delta x}
+\]
+Ortonormalidad en puntos de malla: $\langle C_i|C_j\rangle = \Delta x\,\delta_{ij}$
+\end{physbox}
+
+\vspace{0.4cm}
+
+% --- Bloque Inferior (Dividido en columnas/minipages) ---
+\begin{columns}[T]
+
+  % Columna Izquierda: Hamiltoniano
+  \begin{column}{0.55\textwidth}
+    \textbf{Hamiltoniano Sinc-DVR:}
+    \small
+    \[
+      H_{ij} = \begin{cases}
+        \dfrac{\pi^2}{6\Delta x^2} + V(x_i) & i=j\\[10pt]
+        \dfrac{(-1)^{i-j}}{\Delta x^2(i-j)^2} & i\ne j
+      \end{cases}
+    \]
+    \footnotesize
+    Estructura \textbf{densa} y simétrica.
+  \end{column}
+
+  % Columna Derecha: Potencial
+  \begin{column}{0.40\textwidth}
+    \vspace{0.2cm}
+    \textbf{Propiedad del Potencial:}
+    \[ V_{ij}=V(x_i)\delta_{ij} \]
+    
+    \vspace{0.2cm}
+    \footnotesize
+    El potencial \textbf{permanece diagonal}, simplificando la construcción frente a otras bases espectrales que requieren integrales de solapamiento.
+  \end{column}
+
+\end{columns}
+
+\end{frame}
+
+
+% --- DIAPOSITIVA 2: Convergencia y Comparativa ---
+\begin{frame}{Método 4 — Sinc-DVR (Eficiencia y Comparativa)}
+
+\begin{columns}[T]
+
+% --- Columna Izquierda: Éxito y Costo ---
+\column{0.48\textwidth}
+\begin{successbox}{Convergencia Espectral}
+Caída \textbf{exponencial} del error con $N$ pequeño.\\
+$N \sim 200$ $\Rightarrow$ error $< 10^{-6}$ para los primeros 4 estados ($E_{0..3}$).
+\end{successbox}
+
+\vspace{0.4cm}
+
+\begin{alertbox}{Costo Computacional}
+\begin{itemize}\setlength\itemsep{4pt}
+  \item Construcción: $\mathcal{O}(N^2)$ (\textbf{densa})
+  \item Diagonalización: $\mathcal{O}(N^3)$
+  \item Memoria: $8N^2$ bytes
+\end{itemize}
+\end{alertbox}
+
+% --- Columna Derecha: Tabla Comparativa ---
+\column{0.48\textwidth}
+\vspace{0.6cm}
+\begin{block}{Comparativa vs. FDM}
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+\textbf{Característica} & \textbf{FDM} & \textbf{Sinc-DVR} \\
+\midrule
+Orden error & $\mathcal{O}(h^2)$ & Exponencial\\
+Estructura $H$ & Rala & Densa\\
+$N$ óptimo & 1000--2000 & 100--300\\
+\bottomrule
+\end{tabular}
+\end{block}
+
+\end{columns}
+
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}{Rango Óptimo y Error de Cada Método (Primeros 4 Niveles)}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    width=10.4cm, height=4.8cm,
+    xlabel={Parámetro característico $N$},
+    ylabel={Error relativo $|\Delta E / E_{analítico}|$},
+    xmin=50, xmax=2100,
+    ymin=1e-8, ymax=1e-0,
+    ymode=log,
+    axis lines=left,
+    grid=major, grid style={gray!15},
+    tick label style={font=\small},
+    label style={font=\small},
+    legend style={font=\small, at={(0.99,0.99)}, anchor=north east, fill=white, fill opacity=0.8},
+    legend columns=2
+  ]
+    % Shooting
+    \addplot[UDsecond,very thick,mark=square*,mark size=2.5,smooth]
+      coordinates {(100,5e-3)(200,1e-3)(500,2e-5)(1000,2e-5)(2000,2e-5)};
+    % FDM
+    \addplot[UDprimary,very thick,mark=triangle*,mark size=2.5,smooth]
+      coordinates {(100,8e-2)(200,2e-2)(500,3e-3)(1000,7e-4)(2000,1.5e-4)};
+    % SHO Base
+    \addplot[UDsuccess,very thick,mark=*,mark size=2.5,smooth]
+      coordinates {(50,3e-4)(100,1e-5)(200,3e-6)(300,2e-6)(400,2e-6)};
+    % Sinc-DVR
+    \addplot[UDaccent!80!black,very thick,mark=diamond*,mark size=2.5,smooth]
+      coordinates {(50,5e-3)(100,1e-5)(200,1e-7)(300,5e-8)(500,4e-8)};
+    \addlegendentry{Shooting (Numerov)}
+    \addlegendentry{Diferencias Finitas}
+    \addlegendentry{Base SHO}
+    \addlegendentry{Sinc-DVR}
+    % Optimal regions
+    \addplot[UDsecond!40, fill=UDsecond!10, fill opacity=0.5, draw=none]
+      coordinates{(500,1e-8)(2000,1e-8)(2000,1e-0)(500,1e-0)} \closedcycle;
+    \addplot[UDprimary!40, fill=UDprimary!10, fill opacity=0.5, draw=none]
+      coordinates{(1000,1e-8)(2000,1e-8)(2000,1e-0)(1000,1e-0)} \closedcycle;
+    \node[rotate=90,font=\tiny,UDsecond] at (axis cs:700,1e-4) {Óptimo Shoot};
+    \node[rotate=90,font=\tiny,UDprimary] at (axis cs:1500,1e-3) {Óptimo FDM};
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+% ============================================================
+\section{Implementaciones Seriales}
+% ============================================================
+
+\begin{frame}[fragile,allowframebreaks]{Serial: Base SHO en Fortran 77 (Código Original)}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\begin{block}{Construcción de Operadores $\hat{X}$, $\hat{P}$}
+\begin{lstlisting}[style=fortranBeamer,language=Fortran]
+C  BASE LHO: MATRICES X y P
+   DO 10 I=1,N-1
+      A_VAL=DBLE(I)
+      X(I,I+1)=DSQRT(A_VAL/2.D0)
+      X(I+1,I)=X(I,I+1)
+      P(I,I+1)=-DSQRT(A_VAL/2.D0)
+      P(I+1,I)=DSQRT(A_VAL/2.D0)
+ 10 CONTINUE
+\end{lstlisting}
+\end{block}
+\vspace{-0.055cm}
+\begin{block}{Potencial via Transformación Unitaria}
+\begin{lstlisting}[style=fortranBeamer,language=Fortran]
+C  V_ij = sum_k VP(i,k)*V(x_k)*VP(j,k)
+   DO 20 I=1,N
+    DO 30 J=I,N
+       SUM=0.D0
+       DO 40 K=1,N
+         SUM=SUM+VP(I,K)*V_MORSE(X_EIG(K))*VP(J,K)
+ 40    CONTINUE
+       VMAT(I,J)=SUM
+       VMAT(J,I)=SUM
+ 30  CONTINUE
+ 20 CONTINUE
+\end{lstlisting}
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{Diagonalización Final}
+\begin{lstlisting}[style=fortranBeamer,language=Fortran]
+C  H = T + V, extraer autovalores
+   CALL MATMUT(P,P,T,N)
+   DO 50 I=1,N
+    DO 60 J=1,N
+       H(I,J) = -0.5D0*T(I,J)+VMAT(I,J)
+ 60  CONTINUE
+ 50 CONTINUE
+   CALL EIGEN(H,N,N,ENERGIA,VP,WORK1,WORK2,Z)
+\end{lstlisting}
+\end{block}
+\vspace{-0.055cm}
+\begin{alertbox}{Problema de Rendimiento}
+\begin{itemize}
+  \item Triple bucle $O(N^3)$ para construir $V_{ij}$
+  \item \texttt{MATMUT} calcula $P^2$ como producto denso
+  \item Acceso con \textbf{stride-$N$}: falla sistemática de caché L1
+\end{itemize}
+\end{alertbox}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[fragile,allowframebreaks]{Serial C: Base SHO — Explotación de Raleza}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{block}{Operador Cinético Pentadiagonal $O(N)$}
+\begin{lstlisting}[language=C,style=cppBeamer]
+// Solo se computan los 5 diagonales de T = P^2
+for (int i = 0; i < n; i++) {
+  if (i > 0)
+    T[i*n+i] += P[i*n+(i-1)]*P[(i-1)*n+i];
+  if (i < n-1)
+    T[i*n+i] += P[i*n+(i+1)]*P[(i+1)*n+i];
+  if (i < n-2) {
+    double val = P[i*n+(i+1)]*P[(i+1)*n+(i+2)];
+    T[i*n+(i+2)] = T[(i+2)*n+i] = val;
+  }
+}
+\end{lstlisting}
+\end{block}
+
+\begin{successbox}{Impacto}
+$\mathcal{O}(N^3) \rightarrow \mathcal{O}(N)$\\
+Speedup serial: $\approx\mathbf{2.5\times}$
+\end{successbox}
+
+\column{0.46\textwidth}
+\begin{block}{Transformación de Base con Localidad Stride-1}
+\begin{lstlisting}[language=C,style=cppBeamer]
+// W = VP * diag(V(E)) — pre-computo
+for(int i=0; i<n; i++)
+  for(int k=0; k<n; k++)
+    W[i*n+k] = VP[i*n+k] * VE[k];
+// VMAT con acceso contiguo (Row-Major)
+for (int i=0; i<n; i++) {
+  for (int j=i; j<n; j++) {
+    double sum = 0.0;
+    const double *ri = &W[i*n];
+    const double *rj = &VP[j*n];
+    for (int k=0; k<n; k++)
+      sum += ri[k] * rj[k];
+
+\end{lstlisting}
+\end{block}
+\begin{block}{Técnica Clave}
+Matriz intermedia $W_{ik}$ $\Rightarrow$ bucle interno con \textbf{stride-1}, habilitando vectorización AVX automática.
+\end{block}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[fragile,allowframebreaks]{Serial: FDM en Fortran 77 y Versión C Optimizada}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\begin{block}{Fortran 77 — Código Original}
+\begin{lstlisting}[style=fortranBeamer,language=Fortran]
+C  Hamiltoniano FDM tridiagonal
+   DX2 = DX * DX
+   DO 100 I=1,N
+      XI = XMIN + DBLE(I)*DX
+      VI = D_POT*(1.D0-DEXP(-ALPHA*(XI-RE)))**2
+      H(I,I) = (1.D0/DX2) + VI
+      IF (I .LT. N) THEN
+         H(I,I+1) = -1.D0/(2.D0*DX2)
+         H(I+1,I) = H(I,I+1)
+      END IF
+100 CONTINUE
+\end{lstlisting}
+\end{block}
+\begin{alertbox}{Problema}
+\begin{itemize}
+  \item \texttt{DEXP} evaluado $N$ veces con división interna
+  \item Almacena en matriz densa aunque es tridiagonal, sin precomputo
+  \item Sin pre-cómputo de constantes
+\end{itemize}
+\end{alertbox}
+
+\column{0.48\textwidth}
+\begin{block}{C Optimizado — Eliminación de Redundancias}
+\begin{lstlisting}[language=C,style=cppBeamer]
+const double dx2_inv = 1.0/(dx*dx);
+const double off_diag = -0.5*dx2_inv;
+for (int i=0; i<n; i++) {
+  const double xi = XMIN + (double)(i+1)*dx;// exp(-alpha*(xi-RE)) — RE absorbido en XMIN
+  const double et = exp(-ALPHA*xi);
+  const double br = 1.0 - et;
+  const double vi = D_POT*(br*br);
+  H[i*n+i] = dx2_inv + vi;
+  if (i < n-1) {
+    H[i*n+(i+1)] = off_diag;
+    H[(i+1)*n+i] = off_diag;
+ 
+\end{lstlisting}
+\end{block}
+\vspace{-0.155cm}
+\begin{successbox}{Speedup serial FDM}
+\textbf{$> 100\times$ de mejora asintótica}\\
+Factor principal: eliminación de potencias redundantes y uso de constantes pre-calculadas.
+\end{successbox}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[fragile,allowframebreaks]{Serial: Shooting — Fortran 77 y Memoización en C}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\begin{block}{Fortran 77 — Bisección y Control de Nodos}
+\begin{lstlisting}[style=fortranBeamer,language=Fortran]
+C  Biseccion con teorema de Sturm
+   DO WHILE(DABS(EUP-ELOW).GT.TOL)
+      ETRIAL=(EUP+ELOW)/2.D0
+      CALL PROPAGAR(ETRIAL,PSI_FINAL,NODOS)
+
+      IF(NODOS.GT.N_TARGET) THEN
+         EUP=ETRIAL
+      ELSE IF(NODOS.LT.N_TARGET) THEN
+         ELOW=ETRIAL
+      ELSE
+         IF(PSI_FINAL*SIGNO_REF.GT.0.D0) THEN
+            EUP=ETRIAL
+         ELSE
+            ELOW=ETRIAL
+         END IF
+      END IF
+   END DO
+\end{lstlisting}
+\end{block}
+
+\column{0.48\textwidth}
+\begin{block}{C Optimizado — Tabulación del Potencial}
+\begin{lstlisting}[language=C,style=cppBeamer]
+// Memoizacion: V(x) se calcula UNA sola vez
+for (int i=0; i<=nsteps; i++) {
+  double x = xmin + i*dx;
+  double tmp = 1.0 - exp(-alpha*x);
+  // 2*V para eliminar multiplicacion en nucleo
+  v_base[i] = 2.0*d_pot*tmp*tmp;
+  if (i < nsteps) {
+    double xm = x + 0.5*dx;
+    double tm = 1.0-exp(-alpha*xm);
+    v_half[i] = 2.0*d_pot*tm*tm;
+  }
+}
+// Nucleo RK4 accede stride-1 a v_base/v_half
+for (int i=0; i<n; i++) {
+  const double rk1_phi = (v_b[i]-en2)*psi;
+  const double vm_term = v_h[i]-en2;
+  const double rk2_phi = vm_term*(psi+h_2*rk1_psi);
+  const double rk3_phi = vm_term*(psi+h_2*rk2_psi);
+  const double rk4_phi = (v_b[i+1]-en2)*(psi+h*rk3_psi);
+  psi += h_6*(rk1_psi+2*rk2_psi+2*rk3_psi+rk4_psi);
+}
+\end{lstlisting}
+\end{block}
+\begin{successbox}{Speedup: $\mathbf{3.5\times}$ serial}
+\end{successbox}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[fragile,allowframebreaks]{Serial: Sinc-DVR — Fortran 77 y Optimización de Micro-Arquitectura}
+\begin{columns}[T]
+\column{0.48\textwidth}
+\begin{block}{Fortran 77 — Construcción Original}
+\begin{lstlisting}[style=fortranBeamer,language=Fortran]
+C  Hamiltoniano Sinc-DVR denso
+   DO 200 I=1,N
+      XI=XMIN+DBLE(I)*DX
+      VI=D_POT*(1.D0-DEXP(-ALPHA*(XI-RE)))**2
+      DO 300 J=1,N
+         IF (I.EQ.J) THEN
+            H(I,J)=(PI**2)/(6.D0*DX**2)+VI
+         ELSE
+            SIGN_FACTOR=(-1.D0)**(I-J)
+            DIST2=DBLE(I-J)**2
+            H(I,J)=SIGN_FACTOR/(DX**2*DIST2)
+         END IF
+300   CONTINUE
+200 CONTINUE
+\end{lstlisting}
+\end{block}
+\begin{alertbox}{Problema de rendimiento}
+\texttt{(-1.D0)**(I-J)} y \texttt{**2} son llamadas a \texttt{pow()}: \textbf{40 ciclos} vs. 1 ciclo con bit AND.
+\end{alertbox}
+
+\column{0.48\textwidth}
+\begin{block}{C Optimizado — Bit-Trick y Triángulo Superior}
+\begin{lstlisting}[language=C,style=cppBeamer]
+const double diag_kin = (M_PI*M_PI)/(6.0*dx2);
+for (int i=0; i<n; i++) {
+  double xi = XMIN + (double)(i+1)*dx;
+  double vi = D_POT*pow(1.0-exp(-ALPHA*xi),2);
+  H[i*n+i] = diag_kin + vi;
+  for (int j=i+1; j<n; j++) {  // Solo triangulo superior => 50% menos escrituras
+    const int diff = i-j;
+    const double inv_d2 = 1.0/(double)(diff*diff);
+    // Bit AND: paridad en 1 ciclo vs. 40 ciclos de pow()
+    const double sign = ((i-j)&1) ? -1.0 : 1.0;
+    H[i*n+j] = (sign*dx2_inv)*inv_d2;
+\end{lstlisting}
+\end{block}
+\begin{block}{Técnicas Aplicadas}
+\begin{itemize}\setlength\itemsep{2pt}
+  \item Eliminación de \texttt{if} dentro del bucle interno
+  \item \texttt{aligned\_alloc(64,...)} $\Rightarrow$ instrucciones \texttt{vmovapd}
+  \item Speedup: $\mathbf{1.8\times - 2.2\times}$
+\end{itemize}
+\end{block}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Banderas de Compilación}
+% ============================================================
+
+\begin{frame}[allowframebreaks]{Análisis de Banderas: Metodología y Métricas}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{physbox}{Protocolo Experimental}
+Se evaluaron 4 niveles de optimización en GCC:
+\begin{enumerate}
+  \item \textbf{-O0}: Sin optimización (código de referencia)
+  \item \textbf{-O1}: Eliminación de redundancias básicas
+  \item \textbf{-O2}: Vectorización SSE (registros XMM 128-bit)
+  \item \textbf{-O3}: Vectorización agresiva AVX (registros YMM 256-bit) + \texttt{-march=native}
+\end{enumerate}
+\end{physbox}
+\vspace{-0.18cm}
+\begin{block}{Tres Métricas Capturadas}
+\begin{enumerate}\setlength\itemsep{3pt}
+  \item \textbf{Tamaño del segmento \texttt{.text}} 
+  \item \textbf{Conteo de saltos} (branches): 
+  \item \textbf{Reportes de inlining y vectorización} (\texttt{-fopt-info-vec})
+\end{enumerate}
+\end{block}
+
+\column{0.46\textwidth}
+\begin{block}{Resultados: Saltos y Tamaño del Binario}
+\begin{center}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Método} & \textbf{Saltos} & \textbf{Saltos} & \textbf{Bytes} & \textbf{Bytes}\\
+ & \textbf{-O0} & \textbf{-O3} & \textbf{-O0} & \textbf{-O3}\\
+\midrule
+\texttt{morse\_base}  & 52 & 73 & 4636 & 4729\\
+\texttt{morse\_fdm}   & 23 & 27 & 3771 & 3627\\
+\texttt{morse\_sinc}  & 27 & 27 & 3626 & 3245\\
+\texttt{morse\_shoot} & 24 & 27 & 4300 & 4328\\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{block}
+\vspace{-0.135cm}
+\begin{alertbox}{Interpretación}
+El aumento de saltos en \texttt{morse\_base} (52$\to$73) indica \textbf{loop versioning}: el compilador genera rutas alternativas del bucle para manejar restos de vectorización SIMD.
+\end{alertbox}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+% --- DIAPOSITIVA 1: Visualización de Tiempos ---
+\begin{frame}{Resultados de Banderas: Comparativa Visual}
+
+\begin{columns}[T]
+
+% --- Columna Izquierda: Gráfica de Barras ---
+\column{0.60\textwidth}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    ybar, bar width=10pt, % Aumenté un poco el ancho de barra
+    width=7.5cm, height=5.5cm, % Gráfica más grande y legible
+    symbolic x coords={-O0,-O1,-O2,-O3},
+    xtick=data,
+    ylabel={Tiempo relativo (base -O0)},
+    ymin=0, ymax=1.15,
+    axis lines=left,
+    grid=major, grid style={gray!15},
+    tick label style={font=\small},
+    label style={font=\small},
+    legend style={font=\tiny, at={(0.98,0.98)}, anchor=north east},
+    legend columns=2
+  ]
+    \addplot[fill=UDsecond!70, draw=UDsecond]
+      coordinates {(-O0,1.0)(-O1,0.38)(-O2,0.29)(-O3,0.25)};
+    \addplot[fill=UDprimary!70, draw=UDprimary]
+      coordinates {(-O0,1.0)(-O1,0.42)(-O2,0.35)(-O3,0.34)};
+    \addplot[fill=UDsuccess!70, draw=UDsuccess]
+      coordinates {(-O0,1.0)(-O1,0.55)(-O2,0.50)(-O3,0.48)};
+    \addplot[fill=UDaccent!70, draw=UDaccent!70!black]
+      coordinates {(-O0,1.0)(-O1,0.65)(-O2,0.61)(-O3,0.59)};
+    \addlegendentry{Shooting}
+    \addlegendentry{FDM}
+    \addlegendentry{Base SHO}
+    \addlegendentry{Sinc-DVR}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+
+% --- Columna Derecha: El Salto Principal ---
+\column{0.35\textwidth}
+\vspace{1.5cm}
+\begin{successbox}{Mayor salto: -O0 $\to$ -O1}
+La ganancia más drástica ocurre al activar las optimizaciones básicas:
+\begin{itemize}
+    \item Eliminación de código muerto.
+    \item Reducción de llamadas redundantes al stack.
+\end{itemize}
+\end{successbox}
+
+\end{columns}
+\end{frame}
+
+
+% --- DIAPOSITIVA 2: Análisis Técnico y Cuellos de Botella ---
+\begin{frame}{Resultados de Banderas: Análisis y Límites}
+
+\begin{columns}[T]
+
+% --- Columna Izquierda: Análisis por Método ---
+\column{0.58\textwidth}
+\begin{block}{Análisis por Método}
+\small
+\begin{itemize}\setlength\itemsep{4pt}
+  \item \textbf{Shooting} ($\Delta_{\max}$): Mayor beneficio en \texttt{-O3} por su naturaleza aritmética escalar e \emph{inlining}.
+  \item \textbf{FDM}: \emph{Loop split} mejora la predicción de saltos en la malla densa.
+  \item \textbf{Sinc-DVR}: Converge en \texttt{-O2}. Estructura ya compacta; \texttt{-O3} no aporta redundancias adicionales.
+  \item \textbf{Base SHO}: En \texttt{-O3} aparece \emph{loop versioning} para registros XMM en la transformación.
+\end{itemize}
+\end{block}
+
+% --- Columna Derecha: Alerta de Memoria ---
+\column{0.38\textwidth}
+\vspace{1.0cm}
+\begin{alertbox}{Límite Detectado}
+\textbf{Memory-bound}:\\
+\vspace{0.2cm}
+\footnotesize
+FDM y Sinc-DVR alcanzan un cuello de botella en el ancho de banda de memoria desde \texttt{-O2}. El procesador queda en espera de datos de la RAM.
+\end{alertbox}
+
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[allowframebreaks]{Logs de Compilación: Inlining, Vectorización y Loop Splitting}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{block}{\faSearch\ Fenómenos Observados en los Logs}
+\begin{enumerate}\setlength\itemsep{4pt}
+  \item \textbf{Inlining de \texttt{v\_morse}:}\\
+  En \texttt{morse\_shoot}, desde \texttt{-O1} el compilador inserta el cuerpo de la función directamente en el integrador. Elimina el overhead en RK4.
+
+  \item \textbf{Vectorización de bucles diagonales:}\\
+  Log reporta \texttt{"loop vectorized using 16/32 byte vectors"} en \texttt{-O2/-O3}. : múltiples elementos de la diagonal calculados en 1 ciclo.
+
+  \item \textbf{Loop Splitting en FDM:}\\
+  Bajo \texttt{-O3}, el compilador divide el bucle de construcción del Hamiltoniano en 2 fragmentos: uno para la diagonal y otro para los elementos off-diagonal. Mejora la predicción de saltos y la localidad L1.
+\end{enumerate}
+\end{block}
+
+\column{0.46\textwidth}
+\begin{alertbox}{Tiling (Blocking) para Caché}
+Se implementó \textit{tiling} en la transformación de base del Hamiltoniano:
+\begin{itemize}
+  \item FFT: tiempo reducido de $1.94\,$s $\to$ $0.64\,$s
+  \item Métodos locales (Base/Lanczos): impacto mínimo; el conjunto de datos $N=400$ ya cabe en la caché L1D (2 MiB del AMD Ryzen Threadripper)
+\end{itemize}
+\end{alertbox}
+\vspace{0.025cm}
+\begin{conclusionbox}{Conclusión del Análisis de Compilación}
+La optimización \textbf{no es solo una bandera de compilador}
+\end{conclusionbox}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Serial vs. Serial Optimizado}
+% ============================================================
+
+% --- DIAPOSITIVA 1: Tabla Comparativa de Rendimiento ---
+\begin{frame}{Comparativa: Serial Original vs. Serial Optimizado}
+
+\begin{center}
+\small % Reducimos ligeramente el tamaño para que la tabla respire mejor
+\begin{tabular}{lp{3.2cm}p{3.2cm}cc}
+\toprule
+\textbf{Método} & \textbf{Optimización Principal} & \textbf{Factor Limitante} & \textbf{Speedup} & \textbf{$T_{serial}$ (s)}\\
+\midrule
+\textbf{FDM} & Pre-cómputo; eliminar \texttt{pow()} & Ancho de banda L3 & $> 100\times$ & 7.191 \\
+\textbf{Shooting} & Memoización; núcleo RK4 stride-1 & Evaluación exponencial & $3.5\times$ & 0.232 \\
+\textbf{Base SHO} & Op. $\hat{T}$ pentadiagonal $O(N)$ & Latencia (stride-N) & $2.5\times$ & 0.179 \\
+\textbf{Sinc-DVR} & Bit-AND; triángulo superior & Diag. densa LAPACK & $1.8$--$2.2\times$ & 0.110 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.4cm}
+\footnotesize
+\textbf{Nota:} Los tiempos corresponden a la ejecución serial optimizada comparada con la versión base sin banderas de optimización ni refinamiento de algoritmos.
+
+\end{frame}
+
+
+% --- DIAPOSITIVA 2: Análisis de Casos y Cuellos de Botella ---
+\begin{frame}{Análisis de Optimización: Éxitos y Limitaciones}
+
+\begin{columns}[T]
+
+% Columna 1: El éxito de FDM
+\column{0.48\textwidth}
+\begin{successbox}{FDM: Caso Extremo}
+\small
+La mejora de $100\times$ se debe a la eliminación de cálculos redundantes de \texttt{DEXP} y \texttt{**2} dentro del bucle crítico. Al pre-computar constantes, el Hamiltoniano esparso se explota eficientemente, pasando de una carga pesada de CPU a una limitada por memoria.
+\end{successbox}
+
+% Columna 2: El límite de Sinc-DVR
+\column{0.48\textwidth}
+\begin{alertbox}{Sinc-DVR: Límite Algorítmico}
+\small
+Aunque la construcción de $H_{ij}$ es eficiente ($O(N^2)$), el tiempo total está dominado por la diagonalización densa vía \texttt{LAPACKE\_dsyev} ($O(N^3)$). Aquí la optimización de código tiene un techo; el cuello de botella es el algoritmo de diagonalización mismo.
+\end{alertbox}
+
+\end{columns}
+
+\vspace{0.5cm}
+\begin{block}{Conclusión Técnica}
+\footnotesize
+La transición de un código "orientado a cálculo" a uno "orientado a memoria" es evidente en FDM, mientras que en métodos espectrales como Sinc-DVR, la complejidad algorítmica prevalece sobre la implementación.
+\end{block}
+
+\end{frame}
+% ─────────────────────────────────────────────────────────────
+\begin{frame}{Gráficas de Comparativa Serial: Cuatro Métodos}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    width=6cm, height=4cm,
+    title={\small Comparativa Serial vs Optimizado},
+    xlabel={$N$}, ylabel={Tiempo (s)},
+    xmode=log, ymode=log,
+    xmin=50, xmax=2000,
+    ymin=1e-4, ymax=20,
+    grid=major, grid style={gray!15},
+    tick label style={font=\tiny},
+    label style={font=\small},
+    legend style={font=\tiny,at={(0.97,0.03)},anchor=south east},
+    legend columns=2
+  ]
+    % FDM serial
+    \addplot[UDprimary, thick, dashed, mark=triangle,mark size=2]
+      coordinates{(100,0.03)(200,0.25)(500,3.6)(1000,7.2)(2000,15)};
+    % FDM opt
+    \addplot[UDprimary, very thick, mark=triangle*,mark size=2]
+      coordinates{(100,3e-4)(200,2e-3)(500,2.5e-2)(1000,0.04)(2000,0.09)};
+    % Shooting serial
+    \addplot[UDsecond, thick, dashed, mark=square,mark size=2]
+      coordinates{(500,0.01)(1000,0.07)(2000,0.23)};
+    % Shooting opt
+    \addplot[UDsecond, very thick, mark=square*,mark size=2]
+      coordinates{(500,4e-3)(1000,2e-2)(2000,0.07)};
+    \addlegendentry{FDM Orig.}
+    \addlegendentry{FDM Opt.}
+    \addlegendentry{Shoot Orig.}
+    \addlegendentry{Shoot Opt.}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+
+\column{0.46\textwidth}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    width=5.6cm, height=4cm,
+    title={\small Base SHO y Sinc-DVR},
+    xlabel={$N$}, ylabel={Tiempo (s)},
+    xmode=log, ymode=log,
+    xmin=50, xmax=500,
+    ymin=1e-4, ymax=1,
+    grid=major, grid style={gray!15},
+    tick label style={font=\tiny},
+    label style={font=\small},
+    legend style={font=\tiny,at={(0.97,0.03)},anchor=south east},
+    legend columns=2
+  ]
+    % Base serial
+    \addplot[UDsuccess, thick, dashed, mark=o,mark size=2]
+      coordinates{(50,3e-3)(100,1.2e-2)(200,0.09)(400,0.18)};
+    % Base opt
+    \addplot[UDsuccess, very thick, mark=*,mark size=2]
+      coordinates{(50,1.5e-3)(100,5e-3)(200,0.04)(400,0.11)};
+    % Sinc serial
+    \addplot[UDaccent!80!black, thick, dashed, mark=diamond,mark size=2]
+      coordinates{(50,3e-3)(100,1.1e-2)(200,0.06)(500,0.11)};
+    % Sinc opt
+    \addplot[UDaccent!80!black, very thick, mark=diamond*,mark size=2]
+      coordinates{(50,1.8e-3)(100,6e-3)(200,0.03)(500,0.11)};
+    \addlegendentry{SHO Orig.}
+    \addlegendentry{SHO Opt.}
+    \addlegendentry{DVR Orig.}
+    \addlegendentry{DVR Opt.}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+\end{columns}
+
+\vspace{0.135cm}
+\begin{conclusionbox}{Síntesis: El Cuello de Bottleneck no es el Hardware}
+Las mejoras más dramáticas vienen de \textbf{decisiones algorítmicas}: explotación de raleza, tabulación del potencial y acceso contiguo a memoria, no de banderas del compilador.
+\end{conclusionbox}
+\end{frame}
+
+% ============================================================
+\section{Paralelización con OpenMP}
+% ============================================================
+
+\begin{frame}[allowframebreaks]{¿Por qué OpenMP? Justificación desde la Arquitectura}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{physbox}{AMD Ryzen Threadripper — Arquitectura Target}
+\begin{itemize}\setlength\itemsep{3pt}
+  \item 8 núcleos físicos con hiperthreading
+  \item Caché L1D: 2 MiB por núcleo (datos)
+  \item Caché L2: 512 KB por núcleo
+
+  \item for-chanel  ancho de banda $\sim$100 GB/s
+\end{itemize}
+\end{physbox}
+\vspace{-0.18cm}
+\begin{block}{Diagnóstico Post-Optimización Serial}
+A pesar de la optimización, los métodos matriciales (FDM y Sinc-DVR) alcanzan un \textbf{techo de memoria (memory-bound)}: el procesador está inactivo esperando datos de RAM. La solución: \textbf{dividir el dominio} para que cada núcleo opere sobre un subconjunto que cabe en su caché L1/L2.
+\end{block}
+
+\column{0.46\textwidth}
+\begin{successbox}{Condiciones para OpenMP}
+\begin{enumerate}\setlength\itemsep{4pt}
+  \item \textbf{Paralelismo de datos}: bucles independientes sobre filas/columnas de matrices
+  \item \textbf{Paralelismo de tareas}: búsqueda independiente de autovalores (Shooting)
+  \item \textbf{Sin condiciones de carrera}: cada hilo accede a regiones de memoria exclusivas (excepto en sección crítica de Shooting)
+\end{enumerate}
+\end{successbox}
+\vspace{0.18cm}
+
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Implementaciones OpenMP}
+% ============================================================
+
+% --- DIAPOSITIVA 1: Afinidad NUMA y Operador Cinético ---
+\begin{frame}[fragile]{OMP: Base SHO — Política NUMA y Operador Cinético}
+
+\begin{columns}[T]
+
+% Columna 1: First-Touch
+\column{0.48\textwidth}
+\begin{block}{First-Touch Policy (Afinidad NUMA)}
+\begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+// Cada hilo inicializa su propia region
+// => paginas fisicas en el nodo local
+#pragma omp parallel for schedule(static)
+for(int i=0; i<n2; i++) {
+  X[i]=0.0; P[i]=0.0;
+  T[i]=0.0; VMAT[i]=0.0;
+}
+\end{lstlisting}
+\end{block}
+\footnotesize
+Garantiza que la memoria esté cerca del núcleo que la procesa, reduciendo la latencia de acceso en sistemas multiprocesador.
+
+% Columna 2: Operador Cinético
+\column{0.48\textwidth}
+\begin{block}{Operador Cinético (Static)}
+\begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+// Carga uniforme => static scheduling
+#pragma omp parallel for schedule(static)
+for (int i=0; i<n; i++) {
+  if (i>0)
+    T[i*n+i] += P[i*n+(i-1)]*P[(i-1)*n+i];
+  if (i<n-1)
+    T[i*n+i] += P[i*n+(i+1)]*P[(i+1)*n+i];
+  if (i<n-2) {
+    double val=P[i*n+(i+1)]*P[(i+1)*n+(i+2)];
+    T[i*n+(i+2)] = T[(i+2)*n+i] = val;
+  }
+}
+\end{lstlisting}
+\end{block}
+\end{columns}
+
+\end{frame}
+
+
+% --- DIAPOSITIVA 2: Transformación de Base y Scheduling ---
+\begin{frame}[fragile]{OMP: Base SHO — Transformación y Balance de Carga}
+
+\begin{columns}[T]
+
+% Columna 1: Código de Transformación
+\column{0.62\textwidth}
+\begin{block}{Transformación con Guided Scheduling}
+\begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+// W = VP*diag(V): collapse para 2 bucles
+#pragma omp for schedule(static) collapse(2)
+for(int i=0; i<n; i++)
+  for(int k=0; k<n; k++)
+    W[i*n+k] = VP[i*n+k]*VE[k];
+
+// VMAT triangular: guided para desbalance
+#pragma omp for schedule(guided)
+for (int i=0; i<n; i++) {
+  for (int j=i; j<n; j++) {
+    double sum=0.0;
+    const double *ri = &W[i*n];
+    const double *rj = &VP[j*n];
+    #pragma GCC ivdep
+    for (int k=0; k<n; k++) sum+=ri[k]*rj[k];
+    VMAT[i*n+j] = VMAT[j*n+i] = sum;
+  }
+}
+\end{lstlisting}
+\end{block}
+
+% Columna 2: Explicación del Scheduling
+\column{0.34\textwidth}
+\vspace{0.5cm}
+\begin{alertbox}{\texttt{collapse} + \texttt{guided}}
+\small
+\textbf{Collapse(2):} Aplana el espacio de iteración para mejorar la granularidad.
+
+\vspace{0.2cm}
+\textbf{Guided:} Compensa el desbalance natural al calcular solo el triángulo superior de la matriz simétrica.
+\end{alertbox}
+
+\end{columns}
+
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[fragile]{OMP: FDM — Static Scheduling y Aislamiento BLAS}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{block}{Inicialización Paralela NUMA}
+\begin{lstlisting}[language=C,style=cppBeamer]
+// First-Touch: distribuye la memoria entre nodos
+#pragma omp parallel for schedule(static)
+for (size_t i=0; i<n2; i++)
+  H[i] = 0.0;
+\end{lstlisting}
+\end{block}
+\vspace{0.18cm}
+\begin{block}{Construcción Paralela del Hamiltoniano}
+\begin{lstlisting}[language=C,style=cppBeamer]
+// Carga uniforme => static scheduling optimo
+#pragma omp parallel for schedule(static)
+for (int i=0; i<n; i++) {
+  const double xi = XMIN+(double)(i+1)*dx;
+  const double et = exp(-ALPHA*xi);
+  const double vi = D_POT*(1.0-et)*(1.0-et);
+
+  H[i*n+i] = dx2_inv + vi;
+  if (i<n-1) {
+    H[i*n+(i+1)] = off_diag;
+    H[(i+1)*n+i] = off_diag;
+  }
+}
+\end{lstlisting}
+\end{block}
+
+\column{0.46\textwidth}
+\begin{block}{Aislamiento de BLAS/LAPACK}
+\begin{lstlisting}[language=bash,style=cppBeamer]
+# Evitar sobresubscripcion de nucleos
+export OPENBLAS_NUM_THREADS=1
+./morse_fdm_omp <N_puntos> <N_hilos>
+\end{lstlisting}
+\end{block}
+\vspace{0.18cm}
+\begin{alertbox}{Límite de FDM con OpenMP}
+La diagonalización \texttt{LAPACKE\_dsyev} es $O(N^3)$ y se ejecuta de forma serializada. El Speedup de OpenMP se limita a la fase de \textbf{construcción} del Hamiltoniano.\\[4pt]
+Para $N=2000$: $T_{constr} \ll T_{diag}$\\
+$\Rightarrow$ Speedup global $S \approx 1.02$
+\end{alertbox}
+\vspace{0.135cm}
+\begin{conclusionbox}{Sin Race Conditions}
+Cada hilo opera sobre fila $i$ exclusiva. No se necesitan secciones críticas ni reducción.
+\end{conclusionbox}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[fragile]{OMP: Shooting — Paralelismo de Tareas y Sincronización}
+
+% --- Parte Superior: Dos Columnas de Código ---
+\begin{columns}[T]
+
+  % Columna Izquierda: Búsqueda Concurrente
+  \begin{column}{0.48\textwidth}
+    \begin{block}{Búsqueda Concurrente}
+    \begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+// Dynamic: biseccion heterogenea
+#pragma omp parallel for schedule(dynamic)
+for (int i=0; i<n_intervals; i++) {
+  double ea = e_min + i*de;
+  double eb = ea + de;
+
+  // Integracion independiente
+  double fa = wave_opt(ea,dx,&grid);
+  double fb = wave_opt(eb,dx,&grid);
+
+  if (fa*fb < 0.0) {
+    double emid = refine(ea,eb,fa);
+    update_global(emid); 
+  }
+}
+    \end{lstlisting}
+    \end{block}
+  \end{column}
+
+  % Columna Derecha: Sección Crítica
+  \begin{column}{0.48\textwidth}
+    \begin{block}{Ordenamiento (Sección Crítica)}
+    \begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+#pragma omp critical
+{ // Los niveles E_n deben estar ordenados
+  if (found < MAX_LEVELS) {
+    int pos = found;
+    // Insercion por desplazamiento
+    while(pos>0 && en[pos-1]>emid) {
+      en[pos] = en[pos-1];
+      pos--;
+    }
+    en[pos] = emid;
+    found++;
+  }
+}
+    \end{lstlisting}
+    \end{block}
+  \end{column}
+
+\end{columns}
+
+\vspace{-0.4cm}
+
+% --- Parte Inferior: Comentario de Éxito ---
+\begin{successbox}{Estrategia de Carga: \texttt{schedule(dynamic)}}
+La bisección de algunas raíces requiere más iteraciones que otras dependiendo de la forma del potencial. El esquema \texttt{dynamic} asegura que los hilos que terminan rápido tomen nuevas tareas del "pool" de intervalos, manteniendo el uso de CPU cercano al $100\%$ y evitando hilos ociosos.
+\end{successbox}
+
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}[fragile]{OMP: Sinc-DVR — Balanceo de Carga y Vectorización SIMD}
+
+% --- Parte Superior: Dos Columnas de Código ---
+\begin{columns}[T]
+
+  % Columna Izquierda: Balanceo Triangular
+  \begin{column}{0.48\textwidth}
+    \begin{block}{Balanceo en Triángulo Superior}
+    \begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+// Guided: compensa desbalance j=i+1..n
+#pragma omp parallel for schedule(guided)
+for (int i=0; i<n; i++) {
+  H[i*n+i] = diag_kin + v_i; 
+
+  for (int j=i+1; j<n; j++) {
+    const int diff = i-j;
+    // Bit-AND: paridad en 1 ciclo
+    const double sign = (diff&1) ? -1.0 : 1.0;
+    H[i*n+j] = (sign*dx2_inv)/(double)(diff*diff);
+  }
+}
+    \end{lstlisting}
+    \end{block}
+  \end{column}
+
+  % Columna Derecha: Vectorización
+  \begin{column}{0.48\textwidth}
+    \begin{block}{Vectorización del Kernel (AVX)}
+    \begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+// -ffast-math + aligned_alloc(64,...) 
+// Genera instrucciones AVX-512
+// vmovapd: carga 8 doubles en 1 ciclo
+for (int j=i+1; j<n; j++) {
+  double inv_d2=1.0/(double)((i-j)*(i-j));
+  double sign=((i-j)&1)?-1.0:1.0;
+  H[i*n+j]=(sign*dx2_inv)*inv_d2;
+}
+    \end{lstlisting}
+    \end{block}
+    \vspace{-0.2cm}
+    
+  \end{column}
+
+\end{columns}
+
+\vspace{0.3cm}
+
+% --- Parte Inferior: Explicación del Scheduling ---
+\begin{conclusionbox}{Justificación de \texttt{schedule(guided)}}
+Para $i=0$, el bucle interno realiza $N-1$ iteraciones, mientras que para $i=N-1$ realiza cero. \texttt{Guided} asigna bloques de iteraciones decrecientes: los hilos reciben mucho trabajo al inicio y "pedazos" más pequeños al final para asegurar que todos terminen al mismo tiempo.
+\end{conclusionbox}
+
+\end{frame}
+
+% ============================================================
+\section{Resultados y Escalabilidad}
+% ============================================================
+
+\begin{frame}{Ley de Amdahl y Speedup por Método ($p = 1\ldots 8$ hilos)}
+\begin{columns}[T]
+\column{0.52\textwidth}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    width=6.8cm, height=4.8cm,
+    xlabel={Número de hilos $p$},
+    ylabel={Speedup $S = T_1/T_p$},
+    xmin=1, xmax=8,
+    ymin=0.5, ymax=10,
+    grid=major, grid style={gray!15},
+    tick label style={font=\small},
+    label style={font=\small},
+    xtick={1,2,4,6,8},
+    legend style={font=\tiny, at={(0.03,0.97)}, anchor=north west},
+    legend columns=1
+  ]
+    % Ideal
+    \addplot[black, dashed, domain=1:8, samples=8] {x};
+    % Shooting (super-linear)
+    \addplot[UDsecond, very thick, mark=square*,mark size=3]
+      coordinates{(1,1)(2,2.0)(4,4.1)(6,6.2)(8,8.27)};
+    % FDM
+    \addplot[UDprimary, very thick, mark=triangle*,mark size=3]
+      coordinates{(1,1)(2,1.01)(4,1.01)(6,1.02)(8,1.02)};
+    % Base SHO
+    \addplot[UDsuccess, very thick, mark=*,mark size=3]
+      coordinates{(1,1)(2,1.2)(4,1.5)(6,1.7)(8,1.84)};
+    % Sinc-DVR
+    \addplot[UDaccent!80!black, very thick, mark=diamond*,mark size=3]
+      coordinates{(1,1)(2,1.0)(4,0.99)(6,0.99)(8,0.99)};
+    \addlegendentry{Ideal lineal}
+    \addlegendentry{Shooting $S=8.27$}
+    \addlegendentry{FDM $S=1.02$}
+    \addlegendentry{Base SHO $S=1.84$}
+    \addlegendentry{Sinc-DVR $S=0.99$}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+
+\column{0.44\textwidth}
+\begin{block}{Tabla de Resultados ($p=8$ hilos)}
+\centering\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Método} & $T_{ser}$ & $T_{opt}$ & $T_{omp8}$ & $S$\\
+\midrule
+Shooting & 0.232 & 0.031 & 0.028 & \textbf{8.27}\\
+FDM      & 7.191 & 0.038 & 7.018 & 1.02\\
+Base SHO & 0.179 & 0.106 & 0.097 & 1.84\\
+Sinc-DVR & 0.110 & 0.110 & 0.110 & 0.99\\
+\bottomrule
+\end{tabular}
+\end{block}
+\vspace{0.135cm}
+\begin{alertbox}{Speedup Superlineal en Shooting}
+$E_p > 1.0$ porque al dividir el dominio de energía entre 8 hilos, cada hilo integra un sub-intervalo cuya malla de potencial \textbf{cabe íntegramente en la caché L1} del núcleo, eliminando fallos de caché.
+\end{alertbox}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}{Eficiencia Paralela y Ley de Amdahl: Discusión}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    width=6.4cm, height=4.4cm,
+    title={\small Eficiencia Paralela $E_p = S/p$},
+    xlabel={Número de hilos $p$},
+    ylabel={Eficiencia $E_p$},
+    xmin=1, xmax=8,
+    ymin=0, ymax=1.2,
+    grid=major, grid style={gray!15},
+    tick label style={font=\small},
+    label style={font=\small},
+    legend style={font=\tiny, at={(0.97,0.97)}, anchor=north east},
+    xtick={1,2,4,6,8},
+    yticklabel style={/pgf/number format/fixed,/pgf/number format/precision=2}
+  ]
+    \addplot[black,dashed,domain=1:8]{1.0};
+    \addplot[UDsecond,very thick,mark=square*,mark size=2.5]
+      coordinates{(1,1.0)(2,1.0)(4,1.03)(6,1.03)(8,1.03)};
+    \addplot[UDsuccess,very thick,mark=*,mark size=2.5]
+      coordinates{(1,1.0)(2,0.60)(4,0.38)(6,0.28)(8,0.23)};
+    \addplot[UDprimary,very thick,mark=triangle*,mark size=2.5]
+      coordinates{(1,1.0)(2,0.51)(4,0.26)(6,0.17)(8,0.13)};
+    \addlegendentry{Ideal}
+    \addlegendentry{Shooting}
+    \addlegendentry{Base SHO}
+    \addlegendentry{FDM}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+
+\column{0.46\textwidth}
+\begin{block}{4 Fenómenos Clave de Rendimiento}
+\begin{enumerate}\setlength\itemsep{3pt}
+  \item \textbf{Speedup superlineal (Shooting):} División del dominio $\rightarrow$ datos en L1/L2 por núcleo $\rightarrow$ cero fallos de caché $\rightarrow$ $E_p > 1$
+
+  \item \textbf{Ley de Amdahl en FDM:} La diagonalización densa (fracción serial $f \approx 0.99$) fija $S_{max} \approx 1.02$, sin importar cuántos hilos se añadan
+
+  \item \textbf{Saturación en Sinc-DVR:} El costo de comunicación y sincronización entre hilos para $N=500$ supera las ganancias aritméticas
+
+  \item \textbf{Eficiencia decreciente en SHO:} Para $N=400$, el overhead de gestión de hilos comienza a competir con el trabajo útil
+\end{enumerate}
+\end{block}
+\end{columns}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}{Escalabilidad en Escala Log-Log: Comportamiento Asintótico}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    width=5.6cm, height=3.6cm,
+    title={\small Shooting: Escalabilidad Log-Log},
+    xlabel={$N_{steps}$}, ylabel={Tiempo (s)},
+    xmode=log, ymode=log,
+    xmin=100, xmax=3000,
+    ymin=1e-4, ymax=1,
+    grid=major,grid style={gray!15},
+    tick label style={font=\tiny},
+    label style={font=\small},
+    legend style={font=\tiny,at={(0.03,0.97)},anchor=north west}
+  ]
+    \addplot[gray!60,very thick] coordinates {(100,2e-1) (3000,2e-1)};
+    \addplot[UDsecond,thick,mark=*,mark size=1.5]
+      coordinates{(100,8e-2)(500,0.12)(1000,0.22)(2000,0.23)};
+    \addplot[UDsecond!70,thick,mark=square*,mark size=1.5]
+      coordinates{(100,4e-2)(500,6e-2)(1000,1.1e-1)(2000,1.15e-1)};
+    \addplot[UDsecond!40,thick,mark=triangle*,mark size=1.5]
+      coordinates{(100,1.5e-2)(500,2.5e-2)(1000,4e-2)(2000,5e-2)};
+    \addplot[UDsecond!20,thick,mark=diamond*,mark size=1.5]
+      coordinates{(100,1e-2)(500,1.5e-2)(1000,2.5e-2)(2000,2.8e-2)};
+    \addlegendentry{Serial}
+    \addlegendentry{2 hilos}
+    \addlegendentry{4 hilos}
+    \addlegendentry{8 hilos}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+\begin{successbox}{Pendientes Paralelas = Speedup Lineal}
+Líneas equidistantes en log-log $\Rightarrow$ el factor de escala (speedup) es constante con $N$: paralelismo verdaderamente escalable.
+\end{successbox}
+
+\column{0.46\textwidth}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    width=5.6cm, height=3.6cm,
+    title={\small FDM: Techo de Amdahl},
+    xlabel={$N$}, ylabel={Tiempo (s)},
+    xmode=log, ymode=log,
+    xmin=100, xmax=2000,
+    ymin=1e-3, ymax=20,
+    grid=major,grid style={gray!15},
+    tick label style={font=\tiny},
+    label style={font=\small},
+    legend style={font=\tiny,at={(0.03,0.97)},anchor=north west}
+  ]
+    \addplot[UDprimary,thick,mark=*,mark size=1.5]
+      coordinates{(100,0.05)(200,0.4)(500,3.5)(1000,7.2)(2000,15)};
+    \addplot[UDprimary!50,thick,mark=square*,mark size=1.5]
+      coordinates{(100,0.045)(200,0.37)(500,3.4)(1000,7.1)(2000,14.8)};
+    \addplot[UDprimary!20,thick,mark=triangle*,mark size=1.5]
+      coordinates{(100,0.04)(200,0.36)(500,3.35)(1000,7.0)(2000,14.7)};
+    \addlegendentry{Serial}
+    \addlegendentry{4 hilos}
+    \addlegendentry{8 hilos}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+\begin{alertbox}{Curvas Convergentes = Ley de Amdahl}
+Para $N$ grande, las curvas convergen: la diagonalización $O(N^3)$ de LAPACK domina y no se paraleliza.
+\end{alertbox}
+\end{columns}
+\end{frame}
+
+% ============================================================
+\section{Comparación Final}
+% ============================================================
+
+% --- DIAPOSITIVA 1: Tabla de Métricas Comparativas ---
+\begin{frame}{Comparación Final Integral: Métricas de Rendimiento}
+
+\begin{center}
+\small % Ajuste para que la tabla sea la protagonista
+\begin{tabular}{lp{1.8cm}p{1.8cm}ccp{2.2cm}}
+\toprule
+\textbf{Método} & \textbf{Error $E_{0..3}$} & \textbf{Convergencia} & \textbf{$S_{serial}$} & \textbf{$S_{OMP8}$} & \textbf{Escalabilidad}\\
+\midrule
+\textbf{Shooting} & $10^{-5}$ & Lineal $O(N)$ & $3.5\times$ & $\mathbf{8.27\times}$ & Excelente \\
+\midrule
+\textbf{FDM} & $10^{-4}$ & Algebraica $O(h^2)$ & $>100\times$ & $1.02\times$ & Nula (LAPACK) \\
+\midrule
+\textbf{Base SHO} & $10^{-6}$ & Espectral & $2.5\times$ & $1.84\times$ & Moderada \\
+\midrule
+\textbf{Sinc-DVR} & $10^{-7}..10^{-8}$ & Exponencial & $2.2\times$ & $0.99\times$ & Nula (Memoria) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\vspace{0.6cm}
+\begin{block}{Notas sobre los Speedups ($S$)}
+\footnotesize
+\begin{itemize}
+    \item $S_{serial}$: Mejora respecto al código base sin optimizar.
+    \item $S_{OMP8}$: Escalabilidad en 8 hilos (Shooting presenta super-linearidad por caché).
+\end{itemize}
+\end{block}
+
+\end{frame}
+
+
+% --- DIAPOSITIVA 2: Recomendaciones y Casos de Uso ---
+\begin{frame}{Conclusiones: ¿Qué método utilizar?}
+
+\vspace{0.5cm}
+\begin{columns}[T]
+
+% Columna 1: Escalabilidad
+\column{0.32\textwidth}
+\begin{successbox}{\faAward\ Escalabilidad}
+\textbf{Shooting Method}\\
+\vspace{0.2cm}
+\small
+Ideal para escenarios HPC masivos. Su paralelismo de tareas permite una eficiencia casi perfecta.
+\end{successbox}
+
+% Columna 2: Precisión
+\column{0.32\textwidth}
+\begin{physbox}{\faBullseye\ Precisión}
+\textbf{Sinc-DVR}\\
+\vspace{0.2cm}
+\small
+Recomendado para cálculos de referencia donde el error debe ser $< 10^{-7}$ con un $N$ mínimo.
+\end{physbox}
+
+% Columna 3: Balance
+\column{0.32\textwidth}
+\begin{conclusionbox}{\faBalanceScale\ Balance}
+\textbf{Base SHO}\\
+\vspace{0.2cm}
+\small
+El "punto dulce": buena precisión ($10^{-6}$) con una escalabilidad aceptable en OpenMP.
+\end{conclusionbox}
+
+\end{columns}
+
+\vspace{0.8cm}
+\begin{alertbox}{Advertencia sobre FDM}
+\footnotesize
+Aunque el speedup serial es masivo ($>100\times$), su dependencia de la diagonalización de matrices grandes lo hace el menos apto para paralelismo de memoria compartida tradicional.
+\end{alertbox}
+
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}{Precisión de los Primeros 4 Niveles: Error vs. Analítico}
+\begin{center}
+\begin{tikzpicture}
+  \begin{axis}[
+    ybar, bar width=9pt,
+    width=11.2cm, height=4.8cm,
+    symbolic x coords={$E_0$,$E_1$,$E_2$,$E_3$},
+    xtick=data,
+    ylabel={Error relativo $|\Delta E/E_{analítico}|$},
+    ymode=log,
+    ymin=1e-9, ymax=1e-2,
+    axis lines=left,
+    grid=major, grid style={gray!15},
+    tick label style={font=\small},
+    label style={font=\small},
+    legend style={font=\small, at={(0.98,0.98)}, anchor=north east, fill=white},
+    legend columns=2
+  ]
+    \addplot[fill=UDsecond!70, draw=UDsecond]
+      coordinates{($E_0$,3e-5)($E_1$,4e-5)($E_2$,5e-5)($E_3$,7e-5)};
+    \addplot[fill=UDprimary!70, draw=UDprimary]
+      coordinates{($E_0$,5e-4)($E_1$,6e-4)($E_2$,8e-4)($E_3$,1.2e-3)};
+    \addplot[fill=UDsuccess!70, draw=UDsuccess]
+      coordinates{($E_0$,3e-6)($E_1$,4e-6)($E_2$,5e-6)($E_3$,8e-6)};
+    \addplot[fill=UDaccent!80, draw=UDaccent!80!black]
+      coordinates{($E_0$,5e-8)($E_1$,6e-8)($E_2$,8e-8)($E_3$,1.2e-7)};
+    \addlegendentry{Shooting (N=1000)}
+    \addlegendentry{FDM (N=1000)}
+    \addlegendentry{Base SHO (N=400)}
+    \addlegendentry{Sinc-DVR (N=200)}
+  \end{axis}
+\end{tikzpicture}
+\end{center}
+\begin{center}
+\small
+\textbf{Anarmonicidad observada}: el error crece con $n$ en todos los métodos, reflejando que los estados excitados exploran regiones del potencial más alejadas del equilibrio.
+\end{center}
+\end{frame}
+
+% ─────────────────────────────────────────────────────────────
+\begin{frame}{Radar de Rendimiento: Comparación Multidimensional}
+\begin{center}
+\begin{tikzpicture}[scale=0.88]
+  % Simple radar chart as polygon overlay on axes
+  \def\R{2.8}
+  % Draw axes
+  \foreach \angle/\label in {90/Precisión, 162/Escalabilidad, 234/Opt.Serial, 306/Costo Mem., 18/Vel. Constr.} {
+    \draw[-,gray!50] (0,0) -- (\angle:\R);
+    \node[font=\tiny\bfseries] at (\angle:\R+0.35) {\label};
+  }
+  % Concentric circles
+  \foreach \r in {0.7,1.4,2.1,2.8} {
+    \draw[gray!30] (0,0) circle(\r);
+  }
+  % Shooting: Prec=0.6, Escal=1.0, Opt=0.7, Mem=1.0, Vel=0.9
+  \draw[UDsecond,very thick,fill=UDsecond!20,opacity=0.7]
+    (90:0.6*\R) -- (162:1.0*\R) -- (234:0.7*\R) -- (306:1.0*\R) -- (18:0.9*\R) -- cycle;
+  % FDM: Prec=0.5, Escal=0.1, Opt=1.0, Mem=0.6, Vel=1.0
+  \draw[UDprimary,very thick,fill=UDprimary!20,opacity=0.7]
+    (90:0.5*\R) -- (162:0.1*\R) -- (234:1.0*\R) -- (306:0.6*\R) -- (18:1.0*\R) -- cycle;
+  % Base SHO: Prec=0.8, Escal=0.5, Opt=0.6, Mem=0.7, Vel=0.7
+  \draw[UDsuccess,very thick,fill=UDsuccess!20,opacity=0.7]
+    (90:0.8*\R) -- (162:0.5*\R) -- (234:0.6*\R) -- (306:0.7*\R) -- (18:0.7*\R) -- cycle;
+  % Sinc-DVR: Prec=1.0, Escal=0.1, Opt=0.5, Mem=0.3, Vel=0.6
+  \draw[UDaccent!80!black,very thick,fill=UDaccent!20,opacity=0.7]
+    (90:1.0*\R) -- (162:0.1*\R) -- (234:0.5*\R) -- (306:0.3*\R) -- (18:0.6*\R) -- cycle;
+  % Legend
+  \node[draw,fill=white,anchor=north west,font=\tiny] at (2.5,1.8) {
+    \begin{tabular}{ll}
+      \textcolor{UDsecond}{$\blacksquare$} & Shooting\\
+      \textcolor{UDprimary}{$\blacksquare$} & FDM\\
+      \textcolor{UDsuccess}{$\blacksquare$} & Base SHO\\
+      \textcolor{UDaccent!80!black}{$\blacksquare$} & Sinc-DVR
+    \end{tabular}
+  };
+\end{tikzpicture}
+\end{center}
+\end{frame}
+
+% ============================================================
+\section{Conclusiones}
+% ============================================================
+
+\begin{frame}{Conclusiones}
+\begin{columns}[T]
+\column{0.50\textwidth}
+\begin{successbox}{\faCheck\ 1. Primacía del Algoritmo sobre el Hardware}
+La mejora de $\mathbf{>100\times}$ en FDM demuestra que la eficiencia es ante todo una cuestión de \textbf{diseño estructural}: pre-cómputo, localidad de datos y explotación de la esparcidad superan cualquier ganancia de núcleos adicionales.
+\end{successbox}
+\vspace{0.27cm}
+\begin{successbox}{\faCheck\ 2. Speedup Superlineal y Jerarquía de Memoria}
+El fenómeno $E_p > 1.0$ en \textbf{Shooting} no contradice la teoría: al dividir el dominio de energías entre núcleos, los datos residen en \textbf{caché L1/L2 por núcleo}, eliminando latencia de RAM.
+\end{successbox}
+\vspace{0.27cm}
+\begin{alertbox}{\faExclamationTriangle\ 3. Ley de Amdahl — Cuellos Secuenciales}
+FDM y Sinc-DVR exhiben $S \approx 1$: la diagonalización densa de LAPACK ($O(N^3)$, serial) es la fracción no paralelizable que limita el speedup máximo, sin importar cuántos hilos se añadan.
+\end{alertbox}
+
+\column{0.46\textwidth}
+\begin{physbox}{\faBook\ 4. Selección de Método por Escenario}
+\begin{enumerate}\setlength\itemsep{4pt}
+  \item \textbf{Escalabilidad masiva} (HPC multihilo):\\
+  \hspace{1em}$\Rightarrow$ \textbf{Shooting} — paralelismo de tareas, $E_p>1$
+  \item \textbf{Precisión extrema} ($N$ reducido):\\
+  \hspace{1em}$\Rightarrow$ \textbf{Sinc-DVR} — convergencia exponencial, $N<300$
+  \item \textbf{Balance precisión/costo}:\\
+  \hspace{1em}$\Rightarrow$ \textbf{Base SHO} — espectral moderado + OpenMP razonable
+  \item \textbf{Mallas densas con optimización serial}:\\
+  \hspace{1em}$\Rightarrow$ \textbf{FDM} — estructura esparsa explotada
+\end{enumerate}
+\end{physbox}
+\vspace{0.225cm}
+\begin{conclusionbox}{\faStar\ Síntesis Final}
+El éxito en computación cuántica numérica depende de \textbf{alinear el modelo físico con la arquitectura del procesador}: optimizar no solo el conteo de operaciones, sino el \textbf{flujo de datos a través de la jerarquía de memoria L1/L2/L3/RAM}.
+\end{conclusionbox}
+\end{columns}
+\end{frame}
+
+% ─── DIAPOSITIVA FINAL ───────────────────────────────────────
+{
+\setbeamertemplate{headline}{}
+\setbeamertemplate{footline}{}
+\begin{frame}
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[UDdark] (current page.south west) rectangle (current page.north east);
+  \fill[UDprimary!70,opacity=0.7]
+    ([yshift=-0.35\paperheight]current page.north west) rectangle
+    ([yshift=0.35\paperheight]current page.south east);
+  \fill[UDsecond]
+    ([xshift=0pt]current page.south west) rectangle
+    ([yshift=0.018\paperheight,xshift=\paperwidth]current page.south west);
+\end{tikzpicture}
+\begin{center}
+\vspace{1.35cm}
+{\LARGE\bfseries\color{white} ¡Gracias!}\\[0.6cm]
+{\color{UDlight}\large Optimización y Paralelización del Potencial de Morse}\\[0.3cm]
+{\color{UDlight}\small Primer Parcial — Sistemas Distribuidos 2026-1}\\[0.6cm]
+\begin{tcolorbox}[colback=UDprimary!20,colframe=UDaccent,width=9cm,
+  fonttitle=\bfseries\small\color{white},title={Autores}]
+\centering\color{white}
+\textbf{Camilo Huertas} \quad | \quad \textbf{Sebastián Rodriguez}\\[2pt]
+{\small Programa Académico de Física\\
+Universidad Distrital Francisco José de Caldas}\\[2pt]
+{\small Docente: Carlos Andrés Gómez Vasco}
+\end{tcolorbox}
+\vspace{0.36cm}
+{\color{UDaccent}\small 27 de marzo de 2026}
+\end{center}
+\end{frame}
+}
+
+\end{document}

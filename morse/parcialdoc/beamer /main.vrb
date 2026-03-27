@@ -1,0 +1,52 @@
+\frametitle{OMP: Sinc-DVR — Balanceo de Carga y Vectorización SIMD}
+
+% --- Parte Superior: Dos Columnas de Código ---
+\begin{columns}[T]
+
+  % Columna Izquierda: Balanceo Triangular
+  \begin{column}{0.48\textwidth}
+    \begin{block}{Balanceo en Triángulo Superior}
+    \begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+// Guided: compensa desbalance j=i+1..n
+#pragma omp parallel for schedule(guided)
+for (int i=0; i<n; i++) {
+  H[i*n+i] = diag_kin + v_i;
+
+  for (int j=i+1; j<n; j++) {
+    const int diff = i-j;
+    // Bit-AND: paridad en 1 ciclo
+    const double sign = (diff&1) ? -1.0 : 1.0;
+    H[i*n+j] = (sign*dx2_inv)/(double)(diff*diff);
+  }
+}
+    \end{lstlisting}
+    \end{block}
+  \end{column}
+
+  % Columna Derecha: Vectorización
+  \begin{column}{0.48\textwidth}
+    \begin{block}{Vectorización del Kernel (AVX)}
+    \begin{lstlisting}[language=C,style=cppBeamer,basicstyle=\tiny\ttfamily]
+// -ffast-math + aligned_alloc(64,...)
+// Genera instrucciones AVX-512
+// vmovapd: carga 8 doubles en 1 ciclo
+for (int j=i+1; j<n; j++) {
+  double inv_d2=1.0/(double)((i-j)*(i-j));
+  double sign=((i-j)&1)?-1.0:1.0;
+  H[i*n+j]=(sign*dx2_inv)*inv_d2;
+}
+    \end{lstlisting}
+    \end{block}
+    \vspace{-0.2cm}
+
+  \end{column}
+
+\end{columns}
+
+\vspace{0.3cm}
+
+% --- Parte Inferior: Explicación del Scheduling ---
+\begin{conclusionbox}{Justificación de \texttt{schedule(guided)}}
+Para $i=0$, el bucle interno realiza $N-1$ iteraciones, mientras que para $i=N-1$ realiza cero. \texttt{Guided} asigna bloques de iteraciones decrecientes: los hilos reciben mucho trabajo al inicio y "pedazos" más pequeños al final para asegurar que todos terminen al mismo tiempo.
+\end{conclusionbox}
+

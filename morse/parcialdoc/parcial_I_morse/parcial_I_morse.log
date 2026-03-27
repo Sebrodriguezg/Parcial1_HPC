@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.1.5)  23 MAR 2026 22:38
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2025/dev/Debian) (preloaded format=pdflatex 2026.1.5)  27 MAR 2026 09:58
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -434,6 +434,14 @@ File: lstlang1.sty 2024/09/23 1.10c listings language file
 LaTeX Info: Redefining \. on input line 11.
 LaTeX Info: Redefining \% on input line 11.
 )
+Runaway argument?
+{\contentsline {subsubsection}{\numberline {5.5.4}M茅todo Sinc-DVR: I\ETC.
+! File ended while scanning use of \@writefile.
+<inserted text> 
+                \par 
+l.32 \begin{document}
+                     
+? 
 \openout1 = `parcial_I_morse.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 32.
@@ -456,7 +464,6 @@ LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 32.
 LaTeX Font Info:    ... okay on input line 32.
 LaTeX Info: Redefining \. on input line 32.
 LaTeX Info: Redefining \% on input line 32.
-
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count314
@@ -482,10 +489,26 @@ e
 \c@lstlisting=\count320
 Package hyperref Info: Link coloring OFF on input line 32.
 
-(./parcial_I_morse.out) (./parcial_I_morse.out)
+(./parcial_I_morse.out)
+Runaway argument?
+{\376\377\000E\000x\000 
+! File ended while scanning use of \@@BOOKMARK.
+<inserted text> 
+                \par 
+l.32 \begin{document}
+                     
+? 
+(./parcial_I_morse.out)
+Runaway argument?
+{\376\377\000E\000x\000 
+! File ended while scanning use of \@@BOOKMARK.
+<inserted text> 
+                \par 
+l.32 \begin{document}
+                     
+? 
 \@outlinefile=\write3
 \openout3 = `parcial_I_morse.out'.
-
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -570,249 +593,791 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 [7]
 
 [8]
-<figures/BASE_ARM_report.png, id=468, 1003.75pt x 903.375pt>
+<figures/BASE_ARM_report.png, id=423, 1003.75pt x 903.375pt>
 File: figures/BASE_ARM_report.png Graphic file (type png)
 <use figures/BASE_ARM_report.png>
-Package pdftex.def Info: figures/BASE_ARM_report.png  used on input line 353.
+Package pdftex.def Info: figures/BASE_ARM_report.png  used on input line 359.
 (pdftex.def)             Requested size: 226.57297pt x 203.91225pt.
-<figures/SINC_DVR_report.png, id=469, 1003.75pt x 903.375pt>
+<figures/SINC_DVR_report.png, id=424, 1003.75pt x 903.375pt>
 File: figures/SINC_DVR_report.png Graphic file (type png)
 <use figures/SINC_DVR_report.png>
-Package pdftex.def Info: figures/SINC_DVR_report.png  used on input line 359.
+Package pdftex.def Info: figures/SINC_DVR_report.png  used on input line 365.
 (pdftex.def)             Requested size: 226.57297pt x 203.91225pt.
-<figures/FDM_MAT_report.png, id=470, 1003.75pt x 903.375pt>
+<figures/FDM_MAT_report.png, id=425, 1003.75pt x 903.375pt>
 File: figures/FDM_MAT_report.png Graphic file (type png)
 <use figures/FDM_MAT_report.png>
-Package pdftex.def Info: figures/FDM_MAT_report.png  used on input line 368.
+Package pdftex.def Info: figures/FDM_MAT_report.png  used on input line 374.
 (pdftex.def)             Requested size: 226.57297pt x 203.91225pt.
-<figures/SHOOTING_report.png, id=471, 1003.75pt x 903.375pt>
+<figures/SHOOTING_report.png, id=426, 1003.75pt x 903.375pt>
 File: figures/SHOOTING_report.png Graphic file (type png)
 <use figures/SHOOTING_report.png>
-Package pdftex.def Info: figures/SHOOTING_report.png  used on input line 374.
+Package pdftex.def Info: figures/SHOOTING_report.png  used on input line 380.
 (pdftex.def)             Requested size: 226.57297pt x 203.91225pt.
 
 
-[9
+[9]
+<figures/plot_base_linear.png, id=431, 1003.75pt x 702.625pt>
+File: figures/plot_base_linear.png Graphic file (type png)
+<use figures/plot_base_linear.png>
+Package pdftex.def Info: figures/plot_base_linear.png  used on input line 403.
+(pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
+<figures/plot_sinc_linear.png, id=432, 1003.75pt x 702.625pt>
+File: figures/plot_sinc_linear.png Graphic file (type png)
+<use figures/plot_sinc_linear.png>
+Package pdftex.def Info: figures/plot_sinc_linear.png  used on input line 409.
+(pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
+<figures/plot_fdm_linear.png, id=433, 1003.75pt x 702.625pt>
+File: figures/plot_fdm_linear.png Graphic file (type png)
+<use figures/plot_fdm_linear.png>
+Package pdftex.def Info: figures/plot_fdm_linear.png  used on input line 418.
+(pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
+<figures/plot_shoot_linear.png, id=434, 1003.75pt x 702.625pt>
+File: figures/plot_shoot_linear.png Graphic file (type png)
+<use figures/plot_shoot_linear.png>
+Package pdftex.def Info: figures/plot_shoot_linear.png  used on input line 424.
+
+(pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
+
+
+[10
 pdfTeX warning (ext4): destination with the same identifier (name{figure.1}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.388 
-      
+l.427 \end{figure}
+                  
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.388 
-      
+l.427 \end{figure}
+                  
 pdfTeX warning (ext4): destination with the same identifier (name{figure.3}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.388 
-      
+l.427 \end{figure}
+                  
 pdfTeX warning (ext4): destination with the same identifier (name{figure.4}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.388 
-       <./figures/BASE_ARM_report.png> <./figures/SINC_DVR_report.png> <./figur
-es/FDM_MAT_report.png> <./figures/SHOOTING_report.png>]
-<figures/plot_base_linear.png, id=480, 1003.75pt x 702.625pt>
-File: figures/plot_base_linear.png Graphic file (type png)
-<use figures/plot_base_linear.png>
-Package pdftex.def Info: figures/plot_base_linear.png  used on input line 408.
-(pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
-<figures/plot_sinc_linear.png, id=481, 1003.75pt x 702.625pt>
-File: figures/plot_sinc_linear.png Graphic file (type png)
-<use figures/plot_sinc_linear.png>
-Package pdftex.def Info: figures/plot_sinc_linear.png  used on input line 414.
-(pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
-<figures/plot_fdm_linear.png, id=482, 1003.75pt x 702.625pt>
-File: figures/plot_fdm_linear.png Graphic file (type png)
-<use figures/plot_fdm_linear.png>
-Package pdftex.def Info: figures/plot_fdm_linear.png  used on input line 423.
-(pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
-<figures/plot_shoot_linear.png, id=483, 1003.75pt x 702.625pt>
-File: figures/plot_shoot_linear.png Graphic file (type png)
-<use figures/plot_shoot_linear.png>
-Package pdftex.def Info: figures/plot_shoot_linear.png  used on input line 429.
-
-(pdftex.def)             Requested size: 226.57297pt x 158.59842pt.
-
-
-[10]
+l.427 \end{figure}
+                   <./figures/BASE_ARM_report.png> <./figures/SINC_DVR_report.p
+ng> <./figures/FDM_MAT_report.png> <./figures/SHOOTING_report.png>]
 
 [11
 pdfTeX warning (ext4): destination with the same identifier (name{figure.5}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.444 
+l.441 
       
 pdfTeX warning (ext4): destination with the same identifier (name{figure.6}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.444 
+l.441 
       
 pdfTeX warning (ext4): destination with the same identifier (name{figure.7}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.444 
+l.441 
       
 pdfTeX warning (ext4): destination with the same identifier (name{figure.8}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.444 
+l.441 
        <./figures/plot_base_linear.png> <./figures/plot_sinc_linear.png> <./fig
 ures/plot_fdm_linear.png> <./figures/plot_shoot_linear.png>]
 LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <10.95> not available
-(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 465.
+(Font)              Font shape `OT1/cmtt/m/n' tried instead on input line 462.
 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 
 
-[12]
+[12] (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2024/09/23 1.10c listings language file
+)
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2024/09/23 1.10c (Carsten Heinz)
+)
 
 [13
 pdfTeX warning (ext4): destination with the same identifier (name{table.1}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.521 \subsubsection
-                    {Uso de BLAS para Multiplicaci贸n Matricial}]
+l.510 
+      ]
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.520 // Pre-computaci贸n 
+                          de pesos (W) para reducir FLOPs internos
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.520 // Pre-computaci贸n 
+                          de pesos (W) para reducir FLOPs internos
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.527 // Multiplicaci贸n 
+                         W * VP^T con acceso contiguo (Stride-1)
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.527 // Multiplicaci贸n 
+                         W * VP^T con acceso contiguo (Stride-1)
+? 
+
 
 [14]
 
 [15]
+Overfull \hbox (6.23349pt too wide) in paragraph at lines 601--602
+[]\OT1/cmr/m/n/10.95 Esta op-ti-mi-za-ci^^Son re-du-ce la com-ple-ji-dad de la 
+eva-lua-ci^^Son de fun-cio-nes tras-cen-den-ta-les de $\OML/cmm/m/it/10.95 O\OT
+1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 N[] \OMS/cmsy/m/n/10.95 ^^B
+ []
+
+
+Overfull \hbox (7.606pt too wide) in paragraph at lines 631--632
+[]\OT1/cmr/m/n/10.95 La op-ti-mi-za-ci^^Son se-rial al-can-za-da es im-pe-ca-bl
+e en t^^Sermi-nos de re-duc-ci^^Son de ins-truc-cio-nes ($\OML/cmm/m/it/10.95 F
+LOPs$\OT1/cmr/m/n/10.95 ).
+ []
+
+
 
 [16]
 
-[17
-pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has
- been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.723     \item I
-                 nline de la funci贸n de potencial para evitar overhead de l...
-]
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.646 // Separaci贸n 
+                     de la diagonal para eliminar 'if' dentro del bucle interno
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.646 // Separaci贸n 
+                     de la diagonal para eliminar 'if' dentro del bucle interno
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.655     // Explotaci贸n 
+                          de simetr铆a: solo calculamos el tri谩ngulo superi...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.655     // Explotaci贸n 
+                          de simetr铆a: solo calculamos el tri谩ngulo superi...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.655     // Explotaci贸n de simetr铆a:
+                                        solo calculamos el tri谩ngulo superi...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "AD.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.655     // Explotaci贸n de simetr铆a:
+                                        solo calculamos el tri谩ngulo superi...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.655 ...simetr铆a: solo calculamos el tri谩ngulo 
+                                                  superior (j > i)
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "A1.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.655 ...simetr铆a: solo calculamos el tri谩ngulo 
+                                                  superior (j > i)
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.660         // Sustituci贸n 
+                              de pow(-1, n) y operador m贸dulo por l贸gica d...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.660         // Sustituci贸n 
+                              de pow(-1, n) y operador m贸dulo por l贸gica d...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.660 ...tuci贸n de pow(-1, n) y operador m贸dulo 
+                                                  por l贸gica de bits
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.660 ...tuci贸n de pow(-1, n) y operador m贸dulo 
+                                                  por l贸gica de bits
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.660 ...ow(-1, n) y operador m贸dulo por l贸gica 
+                                                  de bits
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.660 ...ow(-1, n) y operador m贸dulo por l贸gica 
+                                                  de bits
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.665 ...    H[i * n + j] = val; // LAPACK leer谩 
+                                                  este tri谩ngulo superior (...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "A1.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.665 ...    H[i * n + j] = val; // LAPACK leer谩 
+                                                  este tri谩ngulo superior (...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.665 ... = val; // LAPACK leer谩 este tri谩ngulo 
+                                                  superior ('U')
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "A1.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.665 ... = val; // LAPACK leer谩 este tri谩ngulo 
+                                                  superior ('U')
+? 
+
+
+[17]
 
 [18]
-
-[19
-pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
- been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.836 
-      ]
-
-[20]
-
-[21
-pdfTeX warning (ext4): destination with the same identifier (name{table.4}) has
- been already used, duplicate ignored
-<argument> ...shipout:D \box_use:N \l_shipout_box 
-                                                  \__shipout_drop_firstpage_...
-l.940 \subsubsection
-                    {Conclusi贸n}]
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 956.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `superscript' on input line 956.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 956.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 956.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `superscript' on input line 956.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 956.
-
-<figures/fdm_comp.png, id=551, 1003.75pt x 1204.5pt>
+<figures/base_comp.png, id=597, 1003.75pt x 1204.5pt>
+File: figures/base_comp.png Graphic file (type png)
+<use figures/base_comp.png>
+Package pdftex.def Info: figures/base_comp.png  used on input line 712.
+(pdftex.def)             Requested size: 354.02342pt x 424.83443pt.
+<figures/fdm_comp.png, id=599, 1003.75pt x 1204.5pt>
 File: figures/fdm_comp.png Graphic file (type png)
 <use figures/fdm_comp.png>
-Package pdftex.def Info: figures/fdm_comp.png  used on input line 964.
-(pdftex.def)             Requested size: 330.42041pt x 396.51213pt.
+Package pdftex.def Info: figures/fdm_comp.png  used on input line 721.
+(pdftex.def)             Requested size: 354.02342pt x 424.83443pt.
 
 
-[22]
-<figures/sinc_comp.png, id=558, 1003.75pt x 1204.5pt>
-File: figures/sinc_comp.png Graphic file (type png)
-<use figures/sinc_comp.png>
-Package pdftex.def Info: figures/sinc_comp.png  used on input line 981.
-(pdftex.def)             Requested size: 330.42041pt x 396.51213pt.
-
-
-[23
+[19
 pdfTeX warning (ext4): destination with the same identifier (name{figure.9}) ha
 s been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.985 
-       <./figures/fdm_comp.png>]
-<figures/shoot_comp.png, id=566, 1003.75pt x 1204.5pt>
+l.725 
+       <./figures/base_comp.png>]
+<figures/shoot_comp.png, id=609, 1003.75pt x 1204.5pt>
 File: figures/shoot_comp.png Graphic file (type png)
 <use figures/shoot_comp.png>
-Package pdftex.def Info: figures/shoot_comp.png  used on input line 992.
-(pdftex.def)             Requested size: 330.42041pt x 396.51213pt.
+Package pdftex.def Info: figures/shoot_comp.png  used on input line 730.
+(pdftex.def)             Requested size: 354.02342pt x 424.83443pt.
 
 
-[24
+[20
 pdfTeX warning (ext4): destination with the same identifier (name{figure.10}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.996 
-       <./figures/sinc_comp.png>]
-<figures/base_comp.png, id=573, 1003.75pt x 1204.5pt>
-File: figures/base_comp.png Graphic file (type png)
-<use figures/base_comp.png>
-Package pdftex.def Info: figures/base_comp.png  used on input line 1003.
-(pdftex.def)             Requested size: 377.62642pt x 453.15672pt.
+l.734 
+       <./figures/fdm_comp.png>]
+<figures/sinc_comp.png, id=616, 1003.75pt x 1204.5pt>
+File: figures/sinc_comp.png Graphic file (type png)
+<use figures/sinc_comp.png>
+Package pdftex.def Info: figures/sinc_comp.png  used on input line 737.
+(pdftex.def)             Requested size: 354.02342pt x 424.83443pt.
 
 
-[25
+[21
 pdfTeX warning (ext4): destination with the same identifier (name{figure.11}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1007 
-        <./figures/shoot_comp.png>]
+l.741 
+       <./figures/shoot_comp.png>]
 
-[26
+[22
 pdfTeX warning (ext4): destination with the same identifier (name{figure.12}) h
 as been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1028     \item \textbf
-                        {Ley de Amdahl:} El m茅todo de Cayley present贸 un t...
-
-pdfTeX warning (ext4): destination with the same identifier (name{table.5}) has
+l.758 
+      
+pdfTeX warning (ext4): destination with the same identifier (name{table.2}) has
  been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.1028     \item \textbf
-                        {Ley de Amdahl:} El m茅todo de Cayley present贸 un t...
- <./figures/base_comp.png>]
+l.758 
+       <./figures/sinc_comp.png>]
 
-[27] (./parcial_I_morse.aux
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.775 ...rzamos que cada hilo 'posea' la secci贸n 
+                                                  de memoria que va a procesar
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.775 ...rzamos que cada hilo 'posea' la secci贸n 
+                                                  de memoria que va a procesar
+? 
+
+
+[23]
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.812 ... triangular para VMAT con planificaci贸n 
+                                                  guiada
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.812 ... triangular para VMAT con planificaci贸n 
+                                                  guiada
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.819 ...endencias vectoriales para optimizaci贸n 
+                                                  SIMD
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.819 ...endencias vectoriales para optimizaci贸n 
+                                                  SIMD
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.837 /* Se distribuye la inicializaci贸n 
+                                          para asegurar afinidad de memoria ...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.837 /* Se distribuye la inicializaci贸n 
+                                          para asegurar afinidad de memoria ...
+
+? 
+
+
+[24] (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2024/09/23 1.10c listings language file
+)
+(/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
+File: lstlang1.sty 2024/09/23 1.10c listings language file
+)
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.873 # Evitar que la librer铆a 
+                                interna compita por los n煤cleos de OpenMP
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "AD.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.873 # Evitar que la librer铆a 
+                                interna compita por los n煤cleos de OpenMP
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.873 ...brer铆a interna compita por los n煤cleos 
+                                                  de OpenMP
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "BA.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.873 ...brer铆a interna compita por los n煤cleos 
+                                                  de OpenMP
+? 
+
+
+[25]
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.891 /* Distribuci贸n 
+                       din谩mica: los hilos solicitan carga a medida que ter...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.891 /* Distribuci贸n 
+                       din谩mica: los hilos solicitan carga a medida que ter...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.891 /* Distribuci贸n din谩mica:
+                                  los hilos solicitan carga a medida que ter...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "A1.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.891 /* Distribuci贸n din谩mica:
+                                  los hilos solicitan carga a medida que ter...
+
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.897     // Integraci贸n 
+                          de la EDO para los extremos del intervalo
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.897     // Integraci贸n 
+                          de la EDO para los extremos del intervalo
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.902         // Refinamiento de la ra铆z 
+                                          detectada mediante bisecci贸n
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "AD.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.902         // Refinamiento de la ra铆z 
+                                          detectada mediante bisecci贸n
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.902 ...de la ra铆z detectada mediante bisecci贸n
+                                                  
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.902 ...de la ra铆z detectada mediante bisecci贸n
+                                                  
+? 
+
+! LaTeX Error: Invalid UTF-8 byte sequence (肻expandafter).
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.917         // Inserci贸n 
+                            por desplazamiento para mantener el orden E_n
+? 
+
+! LaTeX Error: Invalid UTF-8 byte "B3.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.917         // Inserci贸n 
+                            por desplazamiento para mantener el orden E_n
+? 
+
+
+[26]
+Overfull \hbox (0.88354pt too wide) in paragraph at lines 940--941
+[]\OT1/cmr/m/n/10.95 La cons-truc-ci^^Son de la ma-triz Ha-mil-to-nia-na Sinc-D
+VR se op-ti-mi-za ex-plo-tan-do su si-metr^^S^^Pa intr^^S^^Pnse-
+ []
+
+
+
+[27]
+<figures/base_full_scaling.png, id=759, 1204.5pt x 1505.625pt>
+File: figures/base_full_scaling.png Graphic file (type png)
+<use figures/base_full_scaling.png>
+Package pdftex.def Info: figures/base_full_scaling.png  used on input line 978.
+
+(pdftex.def)             Requested size: 354.02342pt x 442.52438pt.
+
+
+[28]
+<figures/fdm_full_scaling.png, id=769, 1204.5pt x 1505.625pt>
+File: figures/fdm_full_scaling.png Graphic file (type png)
+<use figures/fdm_full_scaling.png>
+Package pdftex.def Info: figures/fdm_full_scaling.png  used on input line 991.
+(pdftex.def)             Requested size: 354.02342pt x 442.52438pt.
+
+
+[29
+pdfTeX warning (ext4): destination with the same identifier (name{figure.13}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.994 \end{figure}
+                   <./figures/base_full_scaling.png>]
+<figures/shoot_full_scaling.png, id=776, 1204.5pt x 1505.625pt>
+File: figures/shoot_full_scaling.png Graphic file (type png)
+<use figures/shoot_full_scaling.png>
+Package pdftex.def Info: figures/shoot_full_scaling.png  used on input line 100
+4.
+(pdftex.def)             Requested size: 354.02342pt x 442.52438pt.
+
+
+[30
+pdfTeX warning (ext4): destination with the same identifier (name{figure.14}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1007 \end{figure}
+                    <./figures/fdm_full_scaling.png>]
+<figures/sinc_full_scaling.png, id=784, 1204.5pt x 1505.625pt>
+File: figures/sinc_full_scaling.png Graphic file (type png)
+<use figures/sinc_full_scaling.png>
+Package pdftex.def Info: figures/sinc_full_scaling.png  used on input line 1017
+.
+(pdftex.def)             Requested size: 354.02342pt x 442.52438pt.
+
+
+[31
+pdfTeX warning (ext4): destination with the same identifier (name{figure.15}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1020 \end{figure}
+                    <./figures/shoot_full_scaling.png>]
+
+LaTeX Warning: Reference `fig:sinc_scaling' on page 32 undefined on input line 
+1022.
+
+
+
+[32
+pdfTeX warning (ext4): destination with the same identifier (name{figure.16}) h
+as been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1028 
+        <./figures/sinc_full_scaling.png>]
+
+[33
+pdfTeX warning (ext4): destination with the same identifier (name{table.3}) has
+ been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.1070 
+       ]
+
+[34] (./parcial_I_morse.aux
 LaTeX Info: Redefining \. on input line 11.
 LaTeX Info: Redefining \% on input line 11.
 )
@@ -822,19 +1387,28 @@ L3 programming layer <2025-01-18>
  ***********
 
 
+LaTeX Warning: There were undefined references.
+
+
 LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
-Package rerunfilecheck Info: File `parcial_I_morse.out' has not changed.
-(rerunfilecheck)             Checksum: 712B0FDD91D12BCBEA1F6000053CAA7E;21543.
+
+Package rerunfilecheck Warning: File `parcial_I_morse.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+Package rerunfilecheck Info: Checksums for `parcial_I_morse.out':
+(rerunfilecheck)             Before: 82B4282EDED7180E073F1FB0E8832596;20480
+(rerunfilecheck)             After:  CDC4EB14ABA92E47969FD2FE07D1A83A;23587.
  ) 
 Here is how much of TeX's memory you used:
- 15339 strings out of 473197
- 230592 string characters out of 5718606
- 984464 words of memory out of 5000000
- 38184 multiletter control sequences out of 15000+600000
- 567898 words of font info for 70 fonts, out of 8000000 for 9000
+ 15943 strings out of 473197
+ 238632 string characters out of 5718606
+ 1113471 words of memory out of 5000000
+ 38549 multiletter control sequences out of 15000+600000
+ 568519 words of font info for 72 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 79i,11n,93p,688b,2018s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 79i,14n,93p,850b,2077s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/shar
 e/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbxti10.pfb></usr/share/te
@@ -852,10 +1426,10 @@ r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb></usr/share
 e/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/share/texlive/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on parcial_I_morse.pdf (27 pages, 929606 bytes).
+Output written on parcial_I_morse.pdf (34 pages, 1468586 bytes).
 PDF statistics:
- 716 PDF objects out of 1000 (max. 8388607)
- 632 compressed objects within 7 object streams
- 225 named destinations out of 1000 (max. 500000)
- 685 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 985 PDF objects out of 1000 (max. 8388607)
+ 888 compressed objects within 9 object streams
+ 454 named destinations out of 1000 (max. 500000)
+ 617 words of extra memory for PDF output out of 10000 (max. 10000000)
 

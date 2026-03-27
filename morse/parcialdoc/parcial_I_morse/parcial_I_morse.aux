@@ -40,83 +40,101 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Comportamiento de Convergencia y Error Absoluto}{8}{subsection.3.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Costo Computacional y Escalabilidad Serial}{8}{subsection.3.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Hacia la Optimización y Paralelización}{8}{subsection.3.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Análisis de la Base Armónica: Se observa una convergencia veloz pero limitada por el tamaño de la base para niveles excitados.}}{9}{figure.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Reporte Sinc-DVR: El método más eficiente en precisión por punto, mostrando el error más bajo con $N$ reducido.}}{9}{figure.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Diferencias Finitas (FDM): Se evidencia una convergencia algebraica lenta y un costo $O(N^3)$ dominante.}}{9}{figure.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Método de Disparo: Estabilidad constante en el error con un costo computacional que escala linealmente por iteración.}}{9}{figure.4}\protected@file@percent }
-\newlabel{fig:comparativa_cruda}{{3.3}{9}{Hacia la Optimización y Paralelización}{figure.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Optimización Serial y Jerarquía de Memoria}{10}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Optimización Serial y Jerarquía de Memoria}{9}{section.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Análisis de la Base Armónica: Se observa una convergencia veloz pero limitada por el tamaño de la base para niveles excitados.}}{10}{figure.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Reporte Sinc-DVR: El método más eficiente en precisión por punto, mostrando el error más bajo con $N$ reducido.}}{10}{figure.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Diferencias Finitas (FDM): Se evidencia una convergencia algebraica lenta y un costo $O(N^3)$ dominante.}}{10}{figure.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Método de Disparo: Estabilidad constante en el error con un costo computacional que escala linealmente por iteración.}}{10}{figure.4}\protected@file@percent }
+\newlabel{fig:comparativa_cruda}{{4}{10}{Optimización Serial y Jerarquía de Memoria}{figure.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Impacto de las Banderas de Compilación}{10}{subsection.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.1}Análisis de Vectorización y Logs del Compilador}{10}{subsubsection.4.1.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.2}Comparativa de Tiempos Lineales}{10}{subsubsection.4.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.1}Comparativa de Tiempos Lineales}{11}{subsubsection.4.1.1}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Optimización en Base Armónica: Reducción drástica del tiempo entre \texttt  {-O0} y \texttt  {-O1}.}}{11}{figure.5}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Sinc-DVR: Se observa una convergencia de rendimiento entre \texttt  {-O2} y \texttt  {-O3}.}}{11}{figure.6}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces FDM: El método muestra una mejora sostenida, aunque limitada por el acceso a memoria.}}{11}{figure.7}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Shooting: Máximo aprovechamiento de \texttt  {-O3} debido a su naturaleza aritmética escalar.}}{11}{figure.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.3}Discusión Técnica}{11}{subsubsection.4.1.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.1.2}Discusión Técnica}{11}{subsubsection.4.1.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Estrategias de Localidad: Tiling}{12}{subsection.4.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Análisis de Logs de Compilación y Optimización de Código}{12}{subsection.4.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.1}Metodología de Extracción de Datos}{12}{subsubsection.4.3.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.2}Interpretación de Resultados Técnicos}{12}{subsubsection.4.3.2}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Comparativa de Complejidad de Control vs. Optimización}}{13}{table.1}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.3}Conclusión del Análisis de Compilación}{13}{subsubsection.4.3.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Optimización Serial del Método de Transformación de Bases}{13}{subsection.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.1}Alineación de Memoria y Gestión Robusta}{13}{subsubsection.4.4.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.2}Inline de la Función de Potencial}{13}{subsubsection.4.4.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.3}Precomputación del Potencial}{13}{subsubsection.4.4.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.4}Uso de BLAS para Multiplicación Matricial}{14}{subsubsection.4.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.5}Vectorización Explícita mediante SIMD}{14}{subsubsection.4.4.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.6}Mejora de Localidad de Memoria}{14}{subsubsection.4.4.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.7}Aprovechamiento de Simetría}{14}{subsubsection.4.4.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.8}Optimización del Ensamblaje del Hamiltoniano}{15}{subsubsection.4.4.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.9}Consideraciones sobre la Diagonalización}{15}{subsubsection.4.4.9}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.10}Impacto Global de las Optimizaciones}{15}{subsubsection.4.4.10}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Impacto de las Optimizaciones en el Método de Diferencias Finitas}{15}{subsection.4.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.1}Optimización a Nivel de Implementación}{15}{subsubsection.4.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.2}Optimización Algorítmica: Uso de Matriz Tridiagonal}{16}{subsubsection.4.5.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.3}Reducción de Complejidad Computacional}{16}{subsubsection.4.5.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.4}Reducción del Uso de Memoria}{16}{subsubsection.4.5.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.5}Impacto Experimental en el Tiempo de Ejecución}{17}{subsubsection.4.5.5}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Comparación de tiempos entre implementación densa y tridiagonal}}{17}{table.2}\protected@file@percent }
-\newlabel{tab:fdm_speedup}{{2}{17}{Comparación de tiempos entre implementación densa y tridiagonal}{table.2}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.6}Discusión}{17}{subsubsection.4.5.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.7}Conclusión}{17}{subsubsection.4.5.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Optimización Serial del Método Shooting}{17}{subsection.4.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.1}Optimización a Nivel de Implementación}{18}{subsubsection.4.6.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.2}Limitaciones del Método RK4}{18}{subsubsection.4.6.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.3}Optimización Algorítmica: Método de Numerov}{18}{subsubsection.4.6.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.4}Ventajas del Método de Numerov}{18}{subsubsection.4.6.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.5}Optimización del Método de Búsqueda de Energías}{19}{subsubsection.4.6.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.6}Impacto Experimental en el Tiempo de Ejecución}{19}{subsubsection.4.6.6}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Comparación entre RK4 y Numerov en el método de disparo}}{19}{table.3}\protected@file@percent }
-\newlabel{tab:shoot_speedup}{{3}{19}{Comparación entre RK4 y Numerov en el método de disparo}{table.3}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.7}Discusión}{19}{subsubsection.4.6.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.8}Conclusión}{19}{subsubsection.4.6.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}Optimización Serial del Método Sinc-DVR}{20}{subsection.4.7}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.1}Optimización a Nivel de Implementación}{20}{subsubsection.4.7.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.2}Análisis de Complejidad}{21}{subsubsection.4.7.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.3}Impacto Experimental en el Tiempo de Ejecución}{21}{subsubsection.4.7.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Comparación de tiempos para el método Sinc-DVR}}{21}{table.4}\protected@file@percent }
-\newlabel{tab:sinc_speedup}{{4}{21}{Comparación de tiempos para el método Sinc-DVR}{table.4}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.4}Discusión}{21}{subsubsection.4.7.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.5}Perspectivas de Optimización Avanzada}{21}{subsubsection.4.7.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.6}Conclusión}{22}{subsubsection.4.7.6}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.8}Análisis del Impacto de la Optimización Serial y Comparativa de Rendimiento}{22}{subsection.4.8}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.1}Método de Diferencias Finitas (FDM): El Salto de $O(N^3)$ a $O(N^2)$}{22}{subsubsection.4.8.1}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Comparativa de tiempo de ejecución para el método FDM: Implementación Densa vs. Tridiagonal Optimizada.}}{23}{figure.9}\protected@file@percent }
-\newlabel{fig:fdm_comp}{{9}{23}{Comparativa de tiempo de ejecución para el método FDM: Implementación Densa vs. Tridiagonal Optimizada}{figure.9}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.2}Sinc-DVR: Optimización de la Intensidad Aritmética}{23}{subsubsection.4.8.2}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Efecto de la optimización serial en el método Sinc-DVR.}}{24}{figure.10}\protected@file@percent }
-\newlabel{fig:sinc_comp}{{10}{24}{Efecto de la optimización serial en el método Sinc-DVR}{figure.10}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.3}Método de Shooting: Eficiencia en la Integración de ODEs}{24}{subsubsection.4.8.3}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Rendimiento del método de Shooting tras la optimización de la rutina de integración.}}{25}{figure.11}\protected@file@percent }
-\newlabel{fig:shoot_comp}{{11}{25}{Rendimiento del método de Shooting tras la optimización de la rutina de integración}{figure.11}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.4}Comparativa Global y Eficiencia de Hardware}{25}{subsubsection.4.8.4}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Resumen comparativo del Speedup serial alcanzado en los diferentes métodos numéricos.}}{26}{figure.12}\protected@file@percent }
-\newlabel{fig:base_comp}{{12}{26}{Resumen comparativo del Speedup serial alcanzado en los diferentes métodos numéricos}{figure.12}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces Resumen de métricas de optimización serial.}}{26}{table.5}\protected@file@percent }
-\newlabel{tab:resumen_opt}{{5}{26}{Resumen de métricas de optimización serial}{table.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Paralelización con OpenMP}{27}{section.5}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Análisis de Escalabilidad y Speedup}{27}{subsection.5.1}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusiones}{27}{section.6}\protected@file@percent }
-\gdef \@abspage@last{27}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Implementación Serial: Cálculo de Elementos Matriciales}{13}{subsection.4.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.1}Representación de Operadores y Explotación de Raleza}{13}{subsubsection.4.4.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {7}Optimización del operador cinético a complejidad O(N)}{13}{lstlisting.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.2}Transformación de Base y Localidad de Datos}{14}{subsubsection.4.4.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {8}Transformación de base con optimización de caché}{14}{lstlisting.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Implementación Serial: Diferencias Finitas (FDM)}{14}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.5.1}Discretización del Hamiltoniano y Estructura Matricial}{14}{subsubsection.4.5.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {9}Construcción optimizada del Hamiltoniano FDM}{15}{lstlisting.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Implementación Serial: Método de Shooting (Disparo)}{15}{subsection.4.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.1}Optimización mediante Tabulación del Potencial (Memoización)}{15}{subsubsection.4.6.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {10}Estrategia de tabulación del potencial para eliminar redundancia exponencial}{15}{lstlisting.10}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.2}Eficiencia en el Núcleo de Integración RK4}{16}{subsubsection.4.6.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {11}Implementacion optimizada del integrador RK4}{16}{lstlisting.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.3}Rigor Numérico y Estabilidad}{16}{subsubsection.4.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.4}Crítica Técnica y Formalidad}{16}{subsubsection.4.6.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}Implementación Serial: Método Sinc-DVR}{17}{subsection.4.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.1}Formalismo Matemático y Construcción de la Matriz}{17}{subsubsection.4.7.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {12}Optimización de la construcción del Hamiltoniano Sinc-DVR}{17}{lstlisting.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.2}Optimizaciones de Arquitectura y Micro-gestión de Datos}{17}{subsubsection.4.7.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.3}Análisis Crítico y Opinión Exigente}{18}{subsubsection.4.7.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.4}Optimizaciones de Nivel de Instrucción y Jerarquía de Memoria}{18}{subsubsection.4.7.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.7.5}Análisis de Rigor Técnico}{18}{subsubsection.4.7.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.8}Comparativa Global y Eficiencia de Hardware}{19}{subsection.4.8}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Comparativa de rendimiento: Método de Diagonalización de Base (SHO).}}{19}{figure.9}\protected@file@percent }
+\newlabel{fig:base_comp}{{9}{19}{Comparativa de rendimiento: Método de Diagonalización de Base (SHO)}{figure.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Comparativa de rendimiento: Diferencias Finitas (FDM).}}{20}{figure.10}\protected@file@percent }
+\newlabel{fig:fdm_comp}{{10}{20}{Comparativa de rendimiento: Diferencias Finitas (FDM)}{figure.10}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Comparativa de rendimiento: Método de Shooting (Integración RK4).}}{21}{figure.11}\protected@file@percent }
+\newlabel{fig:shoot_comp}{{11}{21}{Comparativa de rendimiento: Método de Shooting (Integración RK4)}{figure.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Comparativa de rendimiento: Método Sinc-DVR.}}{22}{figure.12}\protected@file@percent }
+\newlabel{fig:sinc_comp}{{12}{22}{Comparativa de rendimiento: Método Sinc-DVR}{figure.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Resumen de métricas de optimización serial y factores limitantes.}}{22}{table.2}\protected@file@percent }
+\newlabel{tab:resumen_opt}{{2}{22}{Resumen de métricas de optimización serial y factores limitantes}{table.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.8.1}Análisis de los Resultados en Hardware}{22}{subsubsection.4.8.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Paralelización con OpenMP}{23}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Implementación en Paralelo: Cálculo de Elementos Matriciales}{23}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.1}Afinidad de Datos y Gestión de Memoria (NUMA)}{23}{subsubsection.5.1.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {13}Inicialización paralela para asegurar afinidad de memoria}{23}{lstlisting.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.2}Construcción Concurrente del Operador Cinético}{23}{subsubsection.5.1.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {14}Cómputo paralelo del operador cinético T}{23}{lstlisting.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.3}Transformación de Base y Balanceo de Carga Guided}{24}{subsubsection.5.1.3}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {15}Transformación de base con balanceo de carga para matrices simétricas}{24}{lstlisting.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Implementación en Paralelo: Método de Diferencias Finitas}{24}{subsection.5.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.1}Optimización de Afinidad NUMA (First-Touch Policy)}{24}{subsubsection.5.2.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {16}Inicialización paralela para optimización de latencia en FDM}{24}{lstlisting.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.2}Construcción del Operador con Planificación Estática}{25}{subsubsection.5.2.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {17}Paralelización de la construcción del Hamiltoniano FDM}{25}{lstlisting.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.2.3}Aislamiento de Dominios de Paralelismo}{25}{subsubsection.5.2.3}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {18}Configuración del entorno para ejecución híbrida}{25}{lstlisting.18}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Implementación en Paralelo: Método de Disparo (Shooting Method)}{26}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.1}Paralelismo de Dominio en el Espectro de Energías}{26}{subsubsection.5.3.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {19}Búsqueda concurrente de autovalores con planificación dinámica}{26}{lstlisting.19}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.2}Sincronización y Sección Crítica de Ordenamiento}{26}{subsubsection.5.3.2}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {20}Sincronización de hilos para la preservación del orden físico}{26}{lstlisting.20}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.3.3}Optimización del Kernel RK4 y Localidad de Caché}{27}{subsubsection.5.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Implementación en Paralelo: Método Sinc-DVR}{27}{subsection.5.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.4.1}Balanceo de Carga en Estructuras Triangulares}{27}{subsubsection.5.4.1}\protected@file@percent }
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {21}Construcción de matriz densa Sinc-DVR con balanceo dinámico}{27}{lstlisting.21}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.4.2}Explotación de Paralelismo de Instrucción (SIMD)}{28}{subsubsection.5.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.4.3}Escalabilidad y Cuellos de Botella}{28}{subsubsection.5.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Análisis de Resultados: Escalabilidad y Rendimiento Multihilo}{28}{subsection.5.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.5.1}Método Base (SHO): Impacto de la Optimización de Memoria}{28}{subsubsection.5.5.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Comparativa de rendimiento para el Método Base. Se observa una traslación constante hacia abajo en la escala log-log debido a la optimización de memoria, y un escalado eficiente hasta los 8 hilos.}}{29}{figure.13}\protected@file@percent }
+\newlabel{fig:base_scaling}{{13}{29}{Comparativa de rendimiento para el Método Base. Se observa una traslación constante hacia abajo en la escala log-log debido a la optimización de memoria, y un escalado eficiente hasta los 8 hilos}{figure.13}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.5.2}Método de Diferencias Finitas (FDM): Dominio de la Diagonalización}{30}{subsubsection.5.5.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Escalabilidad del método FDM. El paralelismo es altamente efectivo en la fase de construcción para mallas densas ($N > 1000$).}}{30}{figure.14}\protected@file@percent }
+\newlabel{fig:fdm_scaling}{{14}{30}{Escalabilidad del método FDM. El paralelismo es altamente efectivo en la fase de construcción para mallas densas ($N > 1000$)}{figure.14}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.5.3}Método de Disparo (Shooting): Eficiencia de Tareas Independientes}{31}{subsubsection.5.5.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Rendimiento del Método de Disparo. La separación uniforme de las líneas en la escala log-log indica un Speedup casi lineal con el número de hilos.}}{31}{figure.15}\protected@file@percent }
+\newlabel{fig:shoot_scaling}{{15}{31}{Rendimiento del Método de Disparo. La separación uniforme de las líneas en la escala log-log indica un Speedup casi lineal con el número de hilos}{figure.15}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.5.4}Método Sinc-DVR: Intensidad Aritmética y Latencia}{32}{subsubsection.5.5.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Análisis Sinc-DVR. Se observa el impacto del balanceo de carga \textit  {guided} para gestionar la naturaleza triangular de la matriz densa.}}{32}{figure.16}\protected@file@percent }
+\newlabel{fig:sinc_scaling}{{16}{32}{Análisis Sinc-DVR. Se observa el impacto del balanceo de carga \textit {guided} para gestionar la naturaleza triangular de la matriz densa}{figure.16}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Análisis de Escalabilidad y Speedup}{33}{subsection.5.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Resumen de rendimiento y escalabilidad para $p=8$ hilos.}}{33}{table.3}\protected@file@percent }
+\newlabel{tab:performance_results}{{3}{33}{Resumen de rendimiento y escalabilidad para $p=8$ hilos}{table.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.6.1}Discusión de Fenómenos de Rendimiento}{33}{subsubsection.5.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusiones}{34}{section.6}\protected@file@percent }
+\gdef \@abspage@last{34}
