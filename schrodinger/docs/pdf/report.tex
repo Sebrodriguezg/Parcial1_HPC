@@ -1,0 +1,236 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{subcaption} % Añadido para agrupar gráficas
+
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+
+\title{\vspace{-2cm}\textbf{Primer Parcial: Optimización y Paralelización en Dinámica Cuántica}\\
+\large Sistemas Distribuidos - Computación de Alto Desempeño}
+\author{
+    Camilo Huertas \quad Sebastian Rodriguez \\[0.3cm]
+    \small Proyecto Curricular de Física \\
+    \small Universidad Distrital Francisco José de Caldas
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+El presente informe detalla el rediseño, optimización y paralelización de la solución numérica de la ecuación de Schrödinger dependiente del tiempo para un paquete de ondas gaussiano. Se parte de dos implementaciones base (Pseudo-espectral y aproximación de Cayley) y se proponen dos métodos adicionales (Expansión de Chebyshev y subespacios de Krylov-Lanczos). Se evalúa el impacto de la jerarquía de memoria mediante optimización serial y banderas de compilación, culminando con una paralelización en memoria compartida vía OpenMP.
+\end{abstract}
+
+\section{Descripción del Problema Físico}
+El problema central abordado en este trabajo consiste en la simulación de la dinámica cuántica de una partícula no relativista mediante la solución numérica de la ecuación de Schrödinger dependiente del tiempo en una dimensión:
+$$ i \frac{\partial \psi(x,t)}{\partial t} = \hat{H} \psi(x,t) $$
+donde se ha asumido un sistema de unidades atómicas ($\hbar = 1$) y $\hat{H}$ representa el operador Hamiltoniano, compuesto por los términos de energía cinética y potencial:
+$$ \hat{H} = -\frac{1}{2m}\frac{\partial^2}{\partial x^2} + V(x) $$
+La dinámica del sistema se estudia evaluando la evolución temporal de un estado inicial $\psi(x,0)$, el cual se modela mediante un paquete de ondas gaussiano. Este enfoque permite analizar la propagación y dispersión del paquete al interactuar con diferentes perfiles de potencial $V(x)$. 
+
+Desde la perspectiva de la física computacional, el desafío radica en aplicar el operador de evolución temporal $\hat{U}(t) = e^{-i\hat{H}t}$ de manera discreta. Para que la solución numérica sea físicamente rigurosa, el método seleccionado debe ser estrictamente unitario, garantizando así la conservación de la probabilidad ($\int |\psi(x,t)|^2 dx = 1$) en cada paso de tiempo computado.
+
+\section{Justificación de los Métodos Numéricos}
+La selección de los esquemas numéricos para integrar la ecuación de Schrödinger dependiente del tiempo es fundamental, dado que distintas formulaciones conducen a estructuras computacionales que impactan directamente el rendimiento y uso de caché. A continuación, se justifican los métodos seleccionados bajo criterios físicos, matemáticos y de complejidad algorítmica.
+
+\subsection{Método 1 (Base): Pseudo-Espectral (Split-Operator con FFT)}
+Este método separa el operador de evolución en sus componentes de energía cinética y potencial. Utiliza la Transformada Rápida de Fourier (FFT) para evaluar la acción del operador cinético en el espacio de momentos.
+\begin{itemize}
+    \item \textbf{Estabilidad y Convergencia:} Es incondicionalmente estable y estrictamente unitario (conserva la norma de la función de onda). Presenta convergencia espectral (el error espacial decae exponencialmente).
+    \item \textbf{Complejidad Algorítmica:} Dominada por la FFT, escalando como $\mathcal{O}(N \log N)$, donde $N$ es el tamaño de la malla espacial. Computacionalmente, sufre de baja localidad espacial debido a los saltos de memoria requeridos por la FFT.
+\end{itemize}
+
+\subsection{Método Propuesto A: Expansión Polinomial de Chebyshev}
+Sustituye la aproximación de diferencias finitas temporales expandiendo el operador de evolución unitaria $e^{-i\hat{H}\Delta t}$ en una base de polinomios de Chebyshev de primera especie. Se discretiza espacialmente el Hamiltoniano mediante diferencias finitas para favorecer la localidad de datos.
+\begin{itemize}
+    \item \textbf{Estabilidad y Convergencia:} Altamente estable siempre que el espectro del Hamiltoniano sea correctamente normalizado al intervalo $[-1, 1]$. El error temporal converge exponencialmente, permitiendo pasos de tiempo ($\Delta t$) significativamente mayores que los métodos estándar.
+    \item \textbf{Complejidad Algorítmica:} Escala como $\mathcal{O}(M \cdot N)$, donde $M$ es el orden del polinomio. Al usar diferencias finitas para la acción de $\hat{H}$, los accesos a memoria son puramente locales, lo que lo hace un candidato ideal para optimización de memoria caché y vectorización.
+\end{itemize}
+
+\subsection{Método Propuesto B: Subespacios de Krylov (Método de Lanczos)}
+En lugar de una expansión polinomial global, este método construye una base ortonormal reducida (espacio de Krylov) adaptada al estado instantáneo de la función de onda, tridiagonalizando el Hamiltoniano en dicho subespacio.
+\begin{itemize}
+    \item \textbf{Estabilidad y Convergencia:} Es un método unitario (preserva fuertemente la probabilidad) y altamente estable. La aproximación es casi exacta dentro del subespacio generado.
+    \item \textbf{Complejidad Algorítmica:} La construcción del subespacio de dimensión $m$ requiere $m$ aplicaciones del Hamiltoniano, escalando como $\mathcal{O}(m \cdot N)$. La diagonalización de la matriz reducida es $\mathcal{O}(m^3)$, pero como usualmente $m \ll N$ (e.g., $m=10$), este costo es despreciable. Su rendimiento computacional se beneficia de operaciones densas vector-vector tipo BLAS nivel 1 y 2.
+\end{itemize}
+
+\section{Análisis de Optimización Serial}
+\label{sec:opt_serial}
+
+Como parte del rediseño computacional, se llevó a cabo un proceso sistemático de optimización del código serial en sus diferentes implementaciones. Este análisis consistió en evaluar el impacto de las banderas de compilación \texttt{-O0}, \texttt{-O1}, \texttt{-O2} y \texttt{-O3}, así como la reorganización interna del algoritmo (optimización de bucles y localidad espacial) para mejorar el uso de la memoria caché. Las pruebas se ejecutaron en un procesador AMD Ryzen Threadripper 3990X (64 núcleos, 128 hilos) con 256 MiB de caché L3 y 2 MiB de caché L1D.
+
+\subsection{Impacto de las Banderas de Compilación}
+
+La optimización a nivel de compilador permite aprovechar características de hardware específicas sin alterar el código fuente. Se midieron los tiempos totales de ejecución variando el nivel de agresividad del compilador. Los resultados consolidados para las implementaciones base y propuestas se presentan en el Cuadro \ref{tab:banderas_compilacion}.
+
+\begin{table}[h]
+\centering
+\caption{Tiempo de ejecución promedio (en segundos) según bandera de compilación y versión del código para los cuatro métodos numéricos.}
+\label{tab:banderas_compilacion}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Método} & \textbf{Versión del Código} & \textbf{-O0 (s)} & \textbf{-O1 (s)} & \textbf{-O2 (s)} & \textbf{-O3 (s)} \\
+\midrule
+\textbf{1. Pseudo-espectral (FFT)} & Original & 1.946 & 1.886 & 2.081 & 2.996 \\
+                                   & Optimizado (Tiling) & 2.264 & 0.643 & 0.661 & 0.706 \\
+\midrule
+\textbf{2. Cayley}                 & Original & 0.234 & 0.140 & 0.141 & 0.134 \\
+                                   & Optimizado & 0.234 & 0.141 & 0.140 & 0.134 \\
+\midrule
+\textbf{3. Chebyshev}              & Original & 10.172 & 4.305 & 4.135 & 4.065 \\
+                                   & Caché (Localidad) & 10.333 & 3.777 & 3.858 & 4.278 \\
+\midrule
+\textbf{4. Krylov-Lanczos}         & Original & 3.475 & 1.450 & 1.381 & 1.142 \\
+                                   & Optimizado & 4.054 & 1.379 & 1.391 & 1.165 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+De los resultados expuestos, se destaca el comportamiento en el \textbf{Método 1 (Pseudo-espectral)}. La versión original presenta anomalías con \texttt{-O3}, incrementando el tiempo de ejecución (hasta 2.99s), lo cual es típico cuando el compilador fuerza un desenrollado de bucles (\textit{loop unrolling}) y vectorizaciones en estructuras de datos con saltos de memoria inconsistentes (como los de la FFT), saturando la caché de instrucciones o registros. Sin embargo, al aplicar reestructuración espacial (versión \textit{Optimizada}), las banderas \texttt{-O1} a \texttt{-O3} reducen drásticamente el tiempo (de 2.26s a 0.64s), demostrando una sinergia exitosa entre la reestructuración manual del código y la automatización del compilador.
+
+En los \textbf{Métodos 3 (Chebyshev) y 4 (Krylov-Lanczos)}, el escalamiento de rendimiento es claro y directo. Pasar de no optimizar (\texttt{-O0}) a niveles superiores reduce el tiempo a menos de la mitad (e.g., de 10.3s a 3.7s en Chebyshev). Esto indica un fuerte aprovechamiento del mapeo de variables en registros (evitando lecturas en RAM) y una eficiente vectorización SIMD en los cálculos densos y locales inherentes a las diferencias finitas y al álgebra matricial.
+
+El impacto visual de estas reducciones de tiempo se puede apreciar en la Figura \ref{fig:barras_optimizacion}.
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../img/barras_optimizacion_code1.png}
+        \caption{Método 1: Pseudo-Espectral (FFT)}
+        \label{fig:opt_c1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../img/barras_optimizacion_code2.png}
+        \caption{Método 2: Aproximación de Cayley}
+        \label{fig:opt_c2}
+    \end{subfigure}
+    \vspace{0.5cm} % Espacio vertical entre las filas
+    
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../img/barras_optimizacion_code3.png}
+        \caption{Método 3: Expansión de Chebyshev}
+        \label{fig:opt_c3}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../img/barras_optimizacion_code4.png}
+        \caption{Método 4: Subespacios de Krylov-Lanczos}
+        \label{fig:opt_c4}
+    \end{subfigure}
+    \caption{Tiempos de ejecución según la bandera de compilación y la versión del código.}
+    \label{fig:barras_optimizacion}
+\end{figure}
+
+\subsection{Análisis de Localidad Espacial y Memoria Caché (Blocking)}
+\label{sec:cache_analysis}
+
+Además de la vectorización, se implementó una estrategia de reestructuración de bucles conocida como \textit{tiling} o \textit{blocking}. El objetivo de esta técnica es dividir los bucles computacionales en bloques de tamaño \texttt{B} (ajustable) para garantizar que los datos procesados residan enteramente en la memoria caché rápida (L1/L2), mitigando así la latencia asociada a los accesos a la memoria principal.
+
+El impacto de esta estrategia varió drásticamente dependiendo de la naturaleza matemática de cada método numérico:
+
+\begin{itemize}
+    \item \textbf{Éxito en métodos no locales (Pseudo-espectral):} En el Método 1, el uso de la Transformada Rápida de Fourier (FFT) impone un patrón de acceso a memoria altamente irregular (debido al \textit{bit-reversal} inherente al algoritmo de Cooley-Tukey). En este escenario, la implementación original sufre de continuos fallos de caché (\textit{cache misses}). Al aplicar \textit{blocking}, se logró organizar los accesos de manera que los bloques de datos se mantuvieran en la caché durante las operaciones densas, resultando en una reducción masiva del tiempo de ejecución (de 1.94s a 0.64s con banderas de optimización).
+    
+    \item \textbf{Saturación en métodos puramente locales (Chebyshev y Lanczos):} Como se evidenció en las figuras anteriores, las versiones ``Optimizadas'' mediante \textit{blocking} de los Métodos 3 y 4 no presentaron una mejora frente a sus versiones originales, mostrando tiempos virtualmente idénticos o ligeramente superiores. Al analizar el código fuente en Fortran (como el operador de Hamiltoniano discreto en el Método de Lanczos), se observa que las operaciones de diferencias finitas iteran sobre arreglos unidimensionales de forma estrictamente secuencial:
+    
+    \begin{verbatim}
+    ! Código base con localidad espacial natural
+    do i = 1, npts - 1
+      h_phi(i) = -0.5_dp * dx2_inv * (phi(i+1) - 2.0_dp*phi(i) + phi(i-1)) ...
+    \end{verbatim}
+    
+    Dado que el tamaño de la malla utilizado en las pruebas seriales fue de $N=2048$, el tamaño total del arreglo en doble precisión compleja ($\sim 32$ KB) cabe holgadamente en la caché L1D (2 MiB) del AMD Ryzen Threadripper utilizado. Por consiguiente, la localidad espacial ya era óptima desde la formulación base. Introducir bucles anidados para el \textit{blocking} (\texttt{do ib = 1, npts, B}) en este contexto particular no reduce los accesos a memoria, sino que introduce una ligera sobrecarga (\textit{loop overhead}) por la evaluación de los límites de iteración. 
+\end{itemize}
+
+Esta divergencia demuestra que la optimización del uso de caché no es una solución universal, sino que debe estar acoplada a la topología computacional del esquema numérico utilizado.
+
+\section{Paralelización con Memoria Compartida (OpenMP)}
+\label{sec:openmp}
+
+Una vez agotadas las estrategias de optimización serial, se procedió a paralelizar las regiones críticas de los algoritmos utilizando el estándar OpenMP para arquitecturas de memoria compartida. Se añadieron directivas \texttt{!\$omp parallel do} en los bucles más costosos, garantizando la correcta privatización de variables temporales e índices de bucles internos para evitar condiciones de carrera (\textit{race conditions}).
+
+Para evaluar el desempeño, se ejecutaron pruebas variando el número de hilos ($p = 1, 2, 4$) y se calcularon métricas estándar de HPC: la aceleración o \textit{Speedup} ($S_p = T_1 / T_p$) y la Eficiencia Paralela ($E_p = S_p / p$). Los resultados consolidados se muestran en el Cuadro \ref{tab:openmp_metrics}.
+
+\begin{table}[h]
+\centering
+\caption{Tiempos de ejecución ($T_p$ en segundos), Speedup ($S_p$) y Eficiencia Paralela ($E_p$) para distintos números de hilos de ejecución ($p$).}
+\label{tab:openmp_metrics}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{l|ccc|ccc|ccc}
+\toprule
+ & \multicolumn{3}{c|}{\textbf{$p = 1$ Hilo}} & \multicolumn{3}{c|}{\textbf{$p = 2$ Hilos}} & \multicolumn{3}{c}{\textbf{$p = 4$ Hilos}} \\
+\textbf{Método} & \textbf{$T_1$ (s)} & \textbf{$S_1$} & \textbf{$E_1$} & \textbf{$T_2$ (s)} & \textbf{$S_2$} & \textbf{$E_2$} & \textbf{$T_4$ (s)} & \textbf{$S_4$} & \textbf{$E_4$} \\
+\midrule
+\textbf{1. Pseudo-espectral} & 269.16 & 1.00 & 1.00 & 167.06 & 1.61 & 0.81 & 122.49 & 2.20 & 0.55 \\
+\textbf{2. Cayley}           & 23.56  & 1.00 & 1.00 & 21.98  & 1.07 & 0.54 & 20.32  & 1.16 & 0.29 \\
+\textbf{3. Chebyshev}        & 54.44  & 1.00 & 1.00 & 28.52  & 1.91 & 0.95 & 15.22  & 3.58 & 0.89 \\
+\textbf{4. Krylov-Lanczos}   & 1319.64& 1.00 & 1.00 & 546.25 & 2.41 & 1.21 & 285.42 & 4.62 & 1.15 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Análisis de Escalabilidad y Ley de Amdahl}
+
+El comportamiento de escalabilidad de los cuatro métodos refleja de manera directa la naturaleza matemática de sus algoritmos y las dependencias de datos inherentes:
+
+\begin{itemize}
+    \item \textbf{Speedup Superlineal (Krylov-Lanczos):} De manera notable, el Método 4 exhibió un comportamiento superlineal ($E_p > 1.0$). Al pasar de 1 a 4 hilos, el tiempo se redujo en un factor de 4.62. Este fenómeno es un efecto clásico de la jerarquía de memoria: al dividir el dominio de la malla computacional entre varios hilos, el subconjunto de datos (\textit{working set}) asignado a cada núcleo se vuelve lo suficientemente pequeño para caber íntegramente en los niveles más bajos y rápidos de la memoria caché (L1/L2). Esto reduce drásticamente los ciclos perdidos esperando lecturas de RAM que ocurrían en la ejecución secuencial pura.
+    
+    \item \textbf{Escalamiento Ideal (Chebyshev):} El Método 3 escaló casi de manera ideal ($E_4 = 0.89$). La expansión polinomial y las diferencias finitas se traducen en bucles paralelos densos (operaciones vector-vector) donde cada iteración es estrictamente independiente de las demás (\textit{embarrassingly parallel}), minimizando el \textit{overhead} de sincronización.
+    
+    \item \textbf{Fracción Serial y Dependencias (Cayley y FFT):} En fuerte contraste, el Método 2 (Cayley) mostró un escalamiento pobre, estancándose en un \textit{speedup} de 1.16 con 4 hilos. La aproximación de Cayley suele requerir la solución de sistemas tridiagonales implícitos en cada paso de tiempo, lo que introduce dependencias de datos que impiden una paralelización directa de los bucles internos. Según la Ley de Amdahl ($S \leq 1/s$), la gran fracción puramente secuencial ($s$) impuesta por esta restricción matemática domina rápidamente el tiempo de ejecución. Por su parte, el Método 1 (FFT) presentó una degradación de eficiencia moderada debido al sobrecosto de comunicación y sincronización requerida durante las etapas de transposición de memoria en el algoritmo de Fourier.
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../img/openmp_speedup_comparativo.png}
+        \caption{Speedup vs. Número de Hilos.}
+        \label{fig:speedup}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{../../img/openmp_eficiencia_comparativa.png}
+        \caption{Eficiencia Paralela vs. Número de Hilos.}
+        \label{fig:eficiencia}
+    \end{subfigure}
+    \caption{Métricas de desempeño paralelo utilizando OpenMP para los cuatro métodos implementados.}
+    \label{fig:openmp_metrics}
+\end{figure}
+
+\section{Análisis Comparativo Integral y Conclusiones}
+\label{sec:conclusiones}
+
+La resolución numérica de la ecuación de Schrödinger dependiente del tiempo exige un delicado balance entre la fidelidad física del modelo y la viabilidad computacional. Tras el proceso de rediseño, optimización y paralelización, se presenta el siguiente análisis comparativo integral:
+
+\begin{enumerate}
+    \item \textbf{El Cuello de Botella Algorítmico vs. Arquitectónico:} Se demostró que la eficiencia computacional no es un mero problema de codificación, sino una consecuencia de las decisiones matemáticas fundamentales. Métodos como el de Cayley, aunque incondicionalmente estables y unitarios en teoría, introducen dependencias de datos en la solución de sistemas tridiagonales que limitan severamente su paralelización. Su fracción serial es tan alta que la Ley de Amdahl lo descarta como una opción viable para simulaciones a gran escala en HPC.
+    
+    \item \textbf{La Ilusión del Tiling y la Jerarquía de Memoria:} El análisis de caché reveló que estrategias agresivas como el \textit{blocking} no son soluciones universales. Mientras que fueron indispensables para organizar los accesos a memoria erráticos de la Transformada Rápida de Fourier (Método 1), resultaron redundantes o perjudiciales en métodos de diferencias finitas puramente locales (Chebyshev y Lanczos) debido al tamaño del problema ($N=2048$), el cual residía cómodamente en la caché L1D del procesador AMD Ryzen Threadripper utilizado.
+    
+    \item \textbf{El Veredicto Final: Chebyshev y Subespacios de Krylov:} Para la evolución temporal de paquetes de ondas, los métodos de expansión polinomial (Chebyshev) y los basados en subespacios de Krylov (Lanczos) emergen como las opciones superiores. Ambos combinan:
+    \begin{itemize}
+        \item \textbf{Estabilidad Física:} Preservan la norma de la función de onda de manera robusta.
+        \item \textbf{Localidad Óptima:} Sus operaciones densas (matriz-vector y diferencias finitas) aprovechan de manera natural la memoria contigua de Fortran.
+        \item \textbf{Escalabilidad HPC:} Al carecer de dependencias implícitas, permiten una vectorización agresiva por parte del compilador (\texttt{-O3}) y exhiben un escalamiento paralelo que roza (o incluso supera) lo ideal mediante OpenMP.
+    \end{itemize}
+\end{enumerate}
+
+En conclusión, la transformación de un código científico base en una herramienta de alto desempeño requiere un entendimiento simbiótico entre las matemáticas del método numérico y la arquitectura del hardware subyacente. Los resultados obtenidos evidencian que el Método de Lanczos (Krylov), gracias a su excepcional localidad de datos y su comportamiento superlineal bajo paralelización, representa la solución más eficiente y escalable para el problema físico abordado.
+\end{document}

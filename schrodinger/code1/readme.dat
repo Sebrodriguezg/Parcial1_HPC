@@ -1,0 +1,13 @@
+Estabilidad numerica:
+- variamos delta t hasta que exploque
+
+Convergencia:
+- variamos Delta x y delta t hasta lo más pequeño que podamos
+- debemos procurar que la norma de la funcion de onda se conserve.
+
+Complejidad aritmetica:
+- N
+
+
+
+
